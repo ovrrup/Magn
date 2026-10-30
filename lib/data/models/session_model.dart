@@ -57,7 +57,7 @@ class SessionModel {
     int? durationInSeconds,
     int? durationInMilliseconds,
     DateTime? timestamp,
-    List<LapModel> laps,
+    List<LapModel>? laps,
     String? note,
   }) {
     return SessionModel(
