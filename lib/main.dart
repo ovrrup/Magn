@@ -932,12 +932,17 @@ class MainWorkspaceScreen extends StatelessWidget {
                     onOpenAnalytics: () => _openAnalytics(context),
                     onOpenSettings: () => _openSettings(context),
                   ),
-                  const Spacer(),
-                  _CenterStage(
-                    controller: controller,
-                    palette: palette,
+                  Expanded(
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: _CenterStage(
+                          controller: controller,
+                          palette: palette,
+                        ),
+                      ),
+                    ),
                   ),
-                  const Spacer(),
                   _BottomControls(
                     controller: controller,
                     palette: palette,

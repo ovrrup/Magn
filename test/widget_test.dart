@@ -5,6 +5,13 @@ import 'package:magn/main.dart';
 void main() {
   testWidgets('StopwatchApp smoke test verifies initial flat matte wordless UI',
       (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     await tester.pumpWidget(const StopwatchApp());
 
     // Main workspace: Play button icon, mode segmented icons, action icons
@@ -29,6 +36,13 @@ void main() {
 
   testWidgets('Mode switcher toggles between Endless and Cycle Mode',
       (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     await tester.pumpWidget(const StopwatchApp());
 
     // Initially in Endless mode: no skip phase button
@@ -119,6 +133,13 @@ void main() {
 
   testWidgets('Skip button skips Cycle phase',
       (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     await tester.pumpWidget(const StopwatchApp());
 
     // Switch to Cycle mode
