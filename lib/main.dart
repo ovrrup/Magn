@@ -737,6 +737,7 @@ class _StopwatchScreenState extends State<StopwatchScreen>
             ),
             style: ElevatedButton.styleFrom(backgroundColor: _deepRed),
             onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(dialogCtx);
               try {
                 final dir = Directory('/sdcard/Download');
@@ -745,25 +746,21 @@ class _StopwatchScreenState extends State<StopwatchScreen>
                     : Directory.current;
                 final file = File('${targetDir.path}/magn_backup.json');
                 await file.writeAsString(jsonStr);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Backup saved: ${file.path}'),
-                      backgroundColor: _deepRed,
-                    ),
-                  );
-                }
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text('Backup saved: ${file.path}'),
+                    backgroundColor: _deepRed,
+                  ),
+                );
               } catch (_) {
-                if (mounted) {
-                  Clipboard.setData(ClipboardData(text: jsonStr));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                          'File access restricted. Copied to clipboard instead.'),
-                      backgroundColor: _coralPink,
-                    ),
-                  );
-                }
+                Clipboard.setData(ClipboardData(text: jsonStr));
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                        'File access restricted. Copied to clipboard instead.'),
+                    backgroundColor: _coralPink,
+                  ),
+                );
               }
             },
           ),
@@ -874,6 +871,7 @@ class _StopwatchScreenState extends State<StopwatchScreen>
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: _deepRed),
                 onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
                   String rawJson = textController.text.trim();
                   if (rawJson.isEmpty) {
                     try {
@@ -919,9 +917,8 @@ class _StopwatchScreenState extends State<StopwatchScreen>
                       });
                     }
                     await _saveData();
-                    if (!context.mounted) return;
                     Navigator.pop(dialogCtx);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(
                         content: Text(
                             'Imported ${_sessions.length} sessions successfully!'),
@@ -929,8 +926,7 @@ class _StopwatchScreenState extends State<StopwatchScreen>
                       ),
                     );
                   } catch (_) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(
                         content: Text('Invalid JSON or unreadable backup file!'),
                         backgroundColor: _coralPink,
@@ -980,14 +976,14 @@ class _StopwatchScreenState extends State<StopwatchScreen>
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: _deepRed),
             onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
               setState(() {
                 _sessions.clear();
                 _currentSessionInterruptions = 0;
               });
               await _saveData();
-              if (!context.mounted) return;
               Navigator.pop(dialogCtx);
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 const SnackBar(
                   content: Text('All session data wiped & calibration reset.'),
                   backgroundColor: _deepRed,
@@ -2401,7 +2397,7 @@ class _SettingsSheet extends StatelessWidget {
                     child: Column(
                       children: [
                         SwitchListTile(
-                          activeColor: _deepRed,
+                          activeThumbColor: _deepRed,
                           title: Text(
                             'Show Timer Digits',
                             style: TextStyle(
@@ -2424,7 +2420,7 @@ class _SettingsSheet extends StatelessWidget {
                           color: primaryText.withValues(alpha: 0.1),
                         ),
                         SwitchListTile(
-                          activeColor: _deepRed,
+                          activeThumbColor: _deepRed,
                           title: Text(
                             'Show Centiseconds (.00)',
                             style: TextStyle(
@@ -2501,7 +2497,7 @@ class _SettingsSheet extends StatelessWidget {
                         ),
                         SwitchListTile(
                           contentPadding: EdgeInsets.zero,
-                          activeColor: _coralPink,
+                          activeThumbColor: _coralPink,
                           title: Text(
                             'Pure Black OLED Mode',
                             style: TextStyle(
