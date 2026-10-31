@@ -2504,7 +2504,7 @@ class _SettingsSheetState extends State<_SettingsSheet> {
       final yyyy = now.year.toString();
       final mm = now.month.toString().padLeft(2, '0');
       final dd = now.day.toString().padLeft(2, '0');
-      final fileName = 'focus_backup_${yyyy}${mm}${dd}.json';
+      final fileName = 'focus_backup_$yyyy$mm$dd.json';
 
       final jsonStr = widget.controller.exportFullJson();
       final tempDir = await getTemporaryDirectory();
