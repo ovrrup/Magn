@@ -21,6 +21,7 @@ void main() {
 
     // Switch to POMODORO
     await tester.tap(find.text('ENDLESS'));
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('POMODORO'), findsOneWidget);
@@ -30,6 +31,7 @@ void main() {
 
     // Switch back to ENDLESS
     await tester.tap(find.text('POMODORO'));
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('ENDLESS'), findsOneWidget);
@@ -39,10 +41,18 @@ void main() {
 
   testWidgets('History button opens bottom sheet with Flow Analytics',
       (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     await tester.pumpWidget(const StopwatchApp());
 
-    // Tap history button
+    // Tap history button to open modal bottom sheet
     await tester.tap(find.byIcon(Icons.history_rounded));
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
     // Verify bottom sheet tabs
@@ -53,6 +63,7 @@ void main() {
 
     // Switch to Session Log
     await tester.tap(find.text('Session Log'));
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('No sessions recorded'), findsOneWidget);
   });
