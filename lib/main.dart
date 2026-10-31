@@ -121,7 +121,7 @@ class _StopwatchAppState extends State<StopwatchApp> {
 }
 
 /// The primary Stopwatch Screen featuring Flow Orb, Calibration Engine,
-/// and native frosted glass mosaic.
+/// and distraction-free gradient aesthetics.
 class StopwatchScreen extends StatefulWidget {
   final ValueChanged<ThemeModeOption>? onThemeChanged;
 
@@ -135,9 +135,8 @@ class StopwatchScreen extends StatefulWidget {
 }
 
 class _StopwatchScreenState extends State<StopwatchScreen>
-    with TickerProviderStateMixin, WidgetsBindingObserver {
-  // Ambient Drift & Flow Orb Animation Controllers
-  late final AnimationController _driftController;
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  // Flow Orb Animation Controller
   late final AnimationController _orbController;
 
   // Mode and Timer State
@@ -175,11 +174,6 @@ class _StopwatchScreenState extends State<StopwatchScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    _driftController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 20),
-    )..repeat();
-
     _orbController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
@@ -191,7 +185,6 @@ class _StopwatchScreenState extends State<StopwatchScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _driftController.dispose();
     _orbController.dispose();
     _timer?.cancel();
     _stopwatch.stop();
@@ -1010,52 +1003,24 @@ class _StopwatchScreenState extends State<StopwatchScreen>
     return MediaQuery.platformBrightnessOf(context) == Brightness.dark;
   }
 
-  // --- Background Theming & Frosted Tiles ---
+  // --- Background Theming ---
 
   List<Color> get _activeBackgroundColors {
     if (_pureBlackOled && _isDarkMode) {
-      return [Colors.black, Colors.black, Colors.black];
+      return const [Colors.black, Colors.black, Colors.black];
     } else if (_isDarkMode) {
       return const [
         Color(0xFF1A0001),
         Color(0xFF4A0002),
         Color(0xFFAA0003),
       ];
-    } else if (_themeOption == ThemeModeOption.light) {
-      return const [
-        Color(0xFFFFEDD5),
-        Color(0xFFFF9E9E),
-        Color(0xFFFF6B6B),
-      ];
     }
-    // Signature Brand Palette
-    return const [_deepRed, _coralPink, _warmCream];
-  }
-
-  Widget _buildFrostedTile() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: _warmCream.withValues(alpha: 0.32),
-              width: 1,
-            ),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                _warmCream.withValues(alpha: 0.28),
-                _warmCream.withValues(alpha: 0.04),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    // Default / Light mode
+    return const [
+      Color(0xFFAA0003),
+      Color(0xFFFF6B6B),
+      Color(0xFFFFEDD5),
+    ];
   }
 
   @override
@@ -1072,272 +1037,231 @@ class _StopwatchScreenState extends State<StopwatchScreen>
         statusBarBrightness: _isDarkMode ? Brightness.dark : Brightness.light,
       ),
       child: Scaffold(
-        body: Stack(
-          children: [
-            // Layer 1: Base Background (Pure Black or Animated Gradient with Glow Orbs)
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: isOled
-                      ? null
-                      : LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: _activeBackgroundColors,
-                          stops: const [0.0, 0.55, 1.0],
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: isOled ? Colors.black : null,
+            gradient: isOled
+                ? null
+                : LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: _activeBackgroundColors,
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
+          ),
+          child: SafeArea(
+            child: Stack(
+              children: [
+                // Top Navigation Bar
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0,
+                      vertical: 12.0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Top-Left Mode Switcher Pill (ENDLESS vs POMODORO)
+                        GestureDetector(
+                          onTap: _isRunning ? null : _toggleMode,
+                          behavior: HitTestBehavior.opaque,
+                          child: Opacity(
+                            opacity: _isRunning ? 0.5 : 1.0,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(999),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isOled
+                                        ? Colors.black.withValues(alpha: 0.6)
+                                        : _warmCream.withValues(alpha: 0.18),
+                                    borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(
+                                      color: isOled
+                                          ? _coralPink
+                                          : _warmCream.withValues(alpha: 0.35),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        _mode == AppMode.endless
+                                            ? Icons.all_inclusive_rounded
+                                            : Icons.timelapse_rounded,
+                                        size: 16,
+                                        color: textColor,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _mode == AppMode.endless
+                                            ? 'ENDLESS'
+                                            : 'POMODORO',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2,
+                                          color: textColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                  color: isOled ? Colors.black : null,
-                ),
-              ),
-            ),
 
-            if (!isOled) ...[
-              Positioned.fill(
-                child: AnimatedBuilder(
-                  animation: _driftController,
-                  builder: (context, _) {
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        final w = constraints.maxWidth;
-                        final h = constraints.maxHeight;
-                        final t = _driftController.value * 2 * math.pi;
-
-                        final x1 = (w * 0.35) + (math.sin(t) * 70) - 160;
-                        final y1 = (h * 0.42) + (math.cos(t) * 90) - 160;
-
-                        final x2 = (w * 0.65) +
-                            (math.cos(t * 0.8 + 1.0) * 60) -
-                            140;
-                        final y2 = (h * 0.58) +
-                            (math.sin(t * 0.8 + 1.0) * 80) -
-                            140;
-
-                        return Stack(
+                        // Top-Right Side-by-Side Action Buttons: Analytics & Settings (8px gap)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Positioned(
-                              left: x1,
-                              top: y1,
-                              child: Container(
-                                width: 320,
-                                height: 320,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: RadialGradient(
-                                    colors: [
-                                      _warmCream.withValues(alpha: 0.35),
-                                      _warmCream.withValues(alpha: 0.0),
-                                    ],
+                            ClipOval(
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isOled
+                                        ? Colors.black.withValues(alpha: 0.6)
+                                        : _warmCream.withValues(alpha: 0.18),
+                                    border: Border.all(
+                                      color: isOled
+                                          ? _coralPink
+                                          : _warmCream.withValues(alpha: 0.35),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: IconButton(
+                                    iconSize: 22,
+                                    padding: const EdgeInsets.all(8),
+                                    constraints: const BoxConstraints(),
+                                    color: textColor,
+                                    icon: const Icon(Icons.insights_rounded),
+                                    onPressed: _openAnalyticsDashboard,
                                   ),
                                 ),
                               ),
                             ),
-                            Positioned(
-                              left: x2,
-                              top: y2,
-                              child: Container(
-                                width: 280,
-                                height: 280,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: RadialGradient(
-                                    colors: [
-                                      _deepRed.withValues(alpha: 0.25),
-                                      _deepRed.withValues(alpha: 0.0),
-                                    ],
+                            const SizedBox(width: 8),
+                            ClipOval(
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isOled
+                                        ? Colors.black.withValues(alpha: 0.6)
+                                        : _warmCream.withValues(alpha: 0.18),
+                                    border: Border.all(
+                                      color: isOled
+                                          ? _coralPink
+                                          : _warmCream.withValues(alpha: 0.35),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: IconButton(
+                                    iconSize: 22,
+                                    padding: const EdgeInsets.all(8),
+                                    constraints: const BoxConstraints(),
+                                    color: textColor,
+                                    icon: const Icon(Icons.tune_rounded),
+                                    onPressed: _openSettingsScreen,
                                   ),
                                 ),
                               ),
                             ),
                           ],
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-
-              // Layer 2: Centered 6x7 Frosted Glass Mosaic Grid
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Center(
-                    child: ShaderMask(
-                      shaderCallback: (Rect bounds) {
-                        return const RadialGradient(
-                          center: Alignment.center,
-                          radius: 0.85,
-                          colors: [
-                            Colors.white,
-                            Colors.transparent,
-                          ],
-                          stops: [0.35, 1.0],
-                        ).createShader(bounds);
-                      },
-                      blendMode: BlendMode.dstIn,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 420),
-                        child: GridView.count(
-                          crossAxisCount: 6,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          padding: const EdgeInsets.all(16),
-                          mainAxisSpacing: 4,
-                          crossAxisSpacing: 4,
-                          children:
-                              List.generate(42, (_) => _buildFrostedTile()),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
-              ),
-            ],
 
-            // Layer 3: Main Foreground UI & Centered Stage
-            SafeArea(
-              child: Stack(
-                children: [
-                  // Top Navigation Bar
-                  Align(
-                    alignment: Alignment.topCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0,
-                        vertical: 12.0,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Top-Left Mode Switcher Pill (ENDLESS vs POMODORO)
-                          GestureDetector(
-                            onTap: _isRunning ? null : _toggleMode,
-                            behavior: HitTestBehavior.opaque,
-                            child: Opacity(
-                              opacity: _isRunning ? 0.5 : 1.0,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
+                // Center Stage: Digits Display or Minimalist Breathing Flow Orb
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Pomodoro Uppercase Phase Pill Label (16px above center)
+                      if (_mode == AppMode.pomodoro) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(999),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isOled
+                                    ? Colors.black.withValues(alpha: 0.6)
+                                    : _warmCream.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
                                   color: isOled
-                                      ? Colors.black
-                                      : _warmCream.withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(
-                                    color: isOled
-                                        ? _coralPink
-                                        : _warmCream.withValues(alpha: 0.35),
-                                    width: 1,
-                                  ),
+                                      ? _coralPink
+                                      : _warmCream.withValues(alpha: 0.35),
+                                  width: 1,
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      _mode == AppMode.endless
-                                          ? Icons.all_inclusive_rounded
-                                          : Icons.timelapse_rounded,
-                                      size: 16,
-                                      color: textColor,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      _mode == AppMode.endless
-                                          ? 'ENDLESS'
-                                          : 'POMODORO',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1.2,
-                                        color: textColor,
-                                      ),
-                                    ),
+                              ),
+                              child: Text(
+                                _pomodoroPhaseLabel,
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.4,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Main Stage: Breathing Flow Orb vs Digits
+                      if (!_showDigits) ...[
+                        _BreathingFlowOrb(
+                          controller: _orbController,
+                          isRunning: _isRunning,
+                          isFlowActive: isFlowActive,
+                          isOled: isOled,
+                        ),
+                      ] else ...[
+                        if (_mode == AppMode.endless) ...[
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                _formatElapsedTime(_endlessElapsedMs ~/ 1000),
+                                style: TextStyle(
+                                  fontSize: 76,
+                                  fontWeight: FontWeight.w700,
+                                  color: textColor,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
                                   ],
                                 ),
                               ),
-                            ),
-                          ),
-
-                          // Top-Right Side-by-Side Action Buttons: Analytics & Settings (8px gap)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                iconSize: 26,
-                                color: textColor,
-                                icon: const Icon(Icons.insights_rounded),
-                                onPressed: _openAnalyticsDashboard,
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                iconSize: 26,
-                                color: textColor,
-                                icon: const Icon(Icons.tune_rounded),
-                                onPressed: _openSettingsScreen,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Center Stage: Digits Display or Minimalist Breathing Flow Orb
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Pomodoro Uppercase Phase Pill Label (16px above center)
-                        if (_mode == AppMode.pomodoro) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isOled
-                                  ? Colors.black
-                                  : _warmCream.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                color: isOled
-                                    ? _coralPink
-                                    : _warmCream.withValues(alpha: 0.35),
-                                width: 1,
-                              ),
-                            ),
-                            child: Text(
-                              _pomodoroPhaseLabel,
-                              style: TextStyle(
-                                color: textColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1.4,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-
-                        // Main Stage: Breathing Flow Orb vs Digits
-                        if (!_showDigits) ...[
-                          _BreathingFlowOrb(
-                            controller: _orbController,
-                            isRunning: _isRunning,
-                            isFlowActive: isFlowActive,
-                            isOled: isOled,
-                          ),
-                        ] else ...[
-                          if (_mode == AppMode.endless) ...[
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: [
+                              if (_showCentiseconds)
                                 Text(
-                                  _formatElapsedTime(_endlessElapsedMs ~/ 1000),
+                                  '.${((_endlessElapsedMs % 1000) ~/ 10).toString().padLeft(2, '0')}',
                                   style: TextStyle(
-                                    fontSize: 76,
+                                    fontSize: 34,
                                     fontWeight: FontWeight.w700,
                                     color: textColor,
                                     fontFeatures: const [
@@ -1345,137 +1269,132 @@ class _StopwatchScreenState extends State<StopwatchScreen>
                                     ],
                                   ),
                                 ),
-                                if (_showCentiseconds)
-                                  Text(
-                                    '.${((_endlessElapsedMs % 1000) ~/ 10).toString().padLeft(2, '0')}',
-                                    style: TextStyle(
-                                      fontSize: 34,
-                                      fontWeight: FontWeight.w700,
-                                      color: textColor,
-                                      fontFeatures: const [
-                                        FontFeature.tabularFigures(),
-                                      ],
-                                    ),
-                                  ),
+                            ],
+                          ),
+                        ] else ...[
+                          Text(
+                            _formatElapsedTime(_pomodoroRemainingSeconds),
+                            style: TextStyle(
+                              fontSize: 76,
+                              fontWeight: FontWeight.w700,
+                              color: textColor,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
                               ],
                             ),
-                          ] else ...[
-                            Text(
-                              _formatElapsedTime(_pomodoroRemainingSeconds),
-                              style: TextStyle(
-                                fontSize: 76,
-                                fontWeight: FontWeight.w700,
-                                color: textColor,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                            ),
-                          ],
+                          ),
                         ],
+                      ],
 
-                        // Pomodoro Cycle Indicator Dots (16px below center)
+                      // Pomodoro Cycle Indicator Dots (16px below center)
+                      if (_mode == AppMode.pomodoro) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(4, (index) {
+                            final isCompletedOrActive =
+                                index < _pomodoroCycle;
+                            return Container(
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isCompletedOrActive
+                                    ? (isOled ? _coralPink : _warmCream)
+                                    : (isOled
+                                        ? _coralPink.withValues(alpha: 0.3)
+                                        : _warmCream.withValues(alpha: 0.35)),
+                              ),
+                            );
+                          }),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
+                // Bottom Action Buttons (64px offset from bottom)
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 64.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ElevatedButton(
+                          onPressed: _toggleTimer,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _isRunning
+                                ? (isOled ? Colors.black : _warmCream)
+                                : _deepRed,
+                            foregroundColor: _isRunning
+                                ? (isOled ? _coralPink : _deepRed)
+                                : _warmCream,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 48,
+                              vertical: 18,
+                            ),
+                            shape: StadiumBorder(
+                              side: isOled
+                                  ? const BorderSide(color: _coralPink, width: 1.5)
+                                  : (_isRunning
+                                      ? const BorderSide(
+                                          color: _deepRed,
+                                          width: 2,
+                                        )
+                                      : BorderSide.none),
+                            ),
+                          ),
+                          child: Text(
+                            _isRunning ? 'STOP' : 'START',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                              color: _isRunning
+                                  ? (isOled ? _coralPink : _deepRed)
+                                  : _warmCream,
+                            ),
+                          ),
+                        ),
+
+                        // Skip Phase Button (Pomodoro mode only)
                         if (_mode == AppMode.pomodoro) ...[
                           const SizedBox(height: 16),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: List.generate(4, (index) {
-                              final isCompletedOrActive =
-                                  index < _pomodoroCycle;
-                              return Container(
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 4),
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isCompletedOrActive
-                                      ? (isOled ? _coralPink : _warmCream)
-                                      : (isOled
-                                          ? _coralPink.withValues(alpha: 0.3)
-                                          : _warmCream.withValues(alpha: 0.35)),
+                          GestureDetector(
+                            onTap: _skipPomodoroPhase,
+                            behavior: HitTestBehavior.opaque,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFAA0003).withValues(alpha: 0.10),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text(
+                                'Skip Phase',
+                                style: TextStyle(
+                                  color: Color(0xFFAA0003),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                  letterSpacing: 0.5,
                                 ),
-                              );
-                            }),
+                              ),
+                            ),
                           ),
                         ],
                       ],
                     ),
                   ),
-
-                  // Bottom Action Buttons (64px offset from bottom)
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 64.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ElevatedButton(
-                            onPressed: _toggleTimer,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _isRunning
-                                  ? (isOled ? Colors.black : _warmCream)
-                                  : _deepRed,
-                              foregroundColor: _isRunning
-                                  ? (isOled ? _coralPink : _deepRed)
-                                  : _warmCream,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 48,
-                                vertical: 18,
-                              ),
-                              shape: StadiumBorder(
-                                side: isOled
-                                    ? const BorderSide(color: _coralPink, width: 1.5)
-                                    : (_isRunning
-                                        ? const BorderSide(
-                                            color: _deepRed,
-                                            width: 2,
-                                          )
-                                        : BorderSide.none),
-                              ),
-                            ),
-                            child: Text(
-                              _isRunning ? 'STOP' : 'START',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.5,
-                                color: _isRunning
-                                    ? (isOled ? _coralPink : _deepRed)
-                                    : _warmCream,
-                              ),
-                            ),
-                          ),
-
-                          // Skip Phase Text Button (Pomodoro mode only)
-                          if (_mode == AppMode.pomodoro) ...[
-                            const SizedBox(height: 12),
-                            TextButton(
-                              onPressed: _skipPomodoroPhase,
-                              style: TextButton.styleFrom(
-                                foregroundColor:
-                                    textColor.withValues(alpha: 0.85),
-                              ),
-                              child: const Text(
-                                'Skip Phase',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 1.0,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -100,4 +100,23 @@ void main() {
     expect(find.text('00:00'), findsOneWidget);
     expect(find.text('.00'), findsOneWidget);
   });
+
+  testWidgets('Skip Phase advances Pomodoro phase',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const StopwatchApp());
+
+    // Switch to POMODORO
+    await tester.tap(find.text('ENDLESS'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('FOCUS'), findsOneWidget);
+
+    // Tap Skip Phase button
+    await tester.tap(find.text('Skip Phase'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('SHORT BREAK'), findsOneWidget);
+  });
 }
