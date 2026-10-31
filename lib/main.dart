@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'dart:ui' show FontFeature, FragmentProgram;
+import 'dart:math' as math;
+import 'dart:ui' show FontFeature, ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -50,7 +51,7 @@ class StopwatchApp extends StatelessWidget {
   }
 }
 
-/// The primary Stopwatch Screen with Shader, Mode Switcher, and Flow Engine.
+/// The primary Stopwatch Screen with Frosted Glass Mosaic, Mode Switcher, and Flow Engine.
 class StopwatchScreen extends StatefulWidget {
   const StopwatchScreen({super.key});
 
@@ -60,9 +61,8 @@ class StopwatchScreen extends StatefulWidget {
 
 class _StopwatchScreenState extends State<StopwatchScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  // Background Fragment Shader
+  // Drifting Glow Animation Controller
   late final AnimationController _animationController;
-  FragmentProgram? _fragmentProgram;
 
   // Mode and State
   AppMode _mode = AppMode.endless;
@@ -97,22 +97,6 @@ class _StopwatchScreenState extends State<StopwatchScreen>
       vsync: this,
       duration: const Duration(seconds: 20),
     )..repeat();
-
-    _loadShader();
-  }
-
-  Future<void> _loadShader() async {
-    try {
-      final program =
-          await FragmentProgram.fromAsset('shaders/frosted_tiles.frag');
-      if (mounted) {
-        setState(() {
-          _fragmentProgram = program;
-        });
-      }
-    } catch (_) {
-      // Graceful fallback for headless tests or environments
-    }
   }
 
   @override
@@ -474,6 +458,32 @@ class _StopwatchScreenState extends State<StopwatchScreen>
     );
   }
 
+  Widget _buildFrostedTile() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: _warmCream.withValues(alpha: 0.32),
+              width: 1,
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                _warmCream.withValues(alpha: 0.28),
+                _warmCream.withValues(alpha: 0.04),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isFlowActive = currentFlowSeconds > 0;
@@ -487,21 +497,118 @@ class _StopwatchScreenState extends State<StopwatchScreen>
       child: Scaffold(
         body: Stack(
           children: [
-            // Background Procedural GLSL Shader
+            // Layer 1: Base vertical LinearGradient + 2 drifting radial glow circles
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [_deepRed, _coralPink, _warmCream],
+                    stops: [0.0, 0.55, 1.0],
+                  ),
+                ),
+              ),
+            ),
             Positioned.fill(
               child: AnimatedBuilder(
                 animation: _animationController,
                 builder: (context, _) {
-                  return CustomPaint(
-                    painter: FrostedTilesPainter(
-                      program: _fragmentProgram,
-                      time: _animationController.value * 20.0,
-                    ),
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final w = constraints.maxWidth;
+                      final h = constraints.maxHeight;
+                      final t = _animationController.value * 2 * math.pi;
+
+                      // Drifting coordinates for Warm Cream 320px glow circle (0.35 opacity)
+                      final x1 = (w * 0.35) + (math.sin(t) * 70) - 160;
+                      final y1 = (h * 0.42) + (math.cos(t) * 90) - 160;
+
+                      // Drifting coordinates for Deep Red 280px glow circle (0.25 opacity)
+                      final x2 =
+                          (w * 0.65) + (math.cos(t * 0.8 + 1.0) * 60) - 140;
+                      final y2 =
+                          (h * 0.58) + (math.sin(t * 0.8 + 1.0) * 80) - 140;
+
+                      return Stack(
+                        children: [
+                          Positioned(
+                            left: x1,
+                            top: y1,
+                            child: Container(
+                              width: 320,
+                              height: 320,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    _warmCream.withValues(alpha: 0.35),
+                                    _warmCream.withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: x2,
+                            top: y2,
+                            child: Container(
+                              width: 280,
+                              height: 280,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    _deepRed.withValues(alpha: 0.25),
+                                    _deepRed.withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
             ),
 
+            // Layer 2: Centered, non-interactive 6x7 frosted glass mosaic
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Center(
+                  child: ShaderMask(
+                    shaderCallback: (Rect bounds) {
+                      return const RadialGradient(
+                        center: Alignment.center,
+                        radius: 0.85,
+                        colors: [
+                          Colors.white,
+                          Colors.transparent,
+                        ],
+                        stops: [0.35, 1.0],
+                      ).createShader(bounds);
+                    },
+                    blendMode: BlendMode.dstIn,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: GridView.count(
+                        crossAxisCount: 6,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
+                        mainAxisSpacing: 4,
+                        crossAxisSpacing: 4,
+                        children: List.generate(42, (_) => _buildFrostedTile()),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Layer 3: Main timer digits and UI
             SafeArea(
               child: Stack(
                 children: [
@@ -1247,48 +1354,5 @@ class _AnalyticsBottomSheetState extends State<_AnalyticsBottomSheet> {
         );
       },
     );
-  }
-}
-
-/// CustomPainter rendering the procedural frosted tiles shader or fallback gradient.
-class FrostedTilesPainter extends CustomPainter {
-  final FragmentProgram? program;
-  final double time;
-
-  FrostedTilesPainter({
-    required this.program,
-    required this.time,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (program != null) {
-      final shader = program!.fragmentShader();
-      shader.setFloat(0, size.width);
-      shader.setFloat(1, size.height);
-      shader.setFloat(2, time);
-
-      final paint = Paint()..shader = shader;
-      canvas.drawRect(Offset.zero & size, paint);
-    } else {
-      // Fallback base gradient matching exact app palette
-      final paint = Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            _deepRed,
-            _coralPink,
-            _warmCream,
-          ],
-          stops: [0.0, 0.5, 1.0],
-        ).createShader(Offset.zero & size);
-      canvas.drawRect(Offset.zero & size, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant FrostedTilesPainter oldDelegate) {
-    return oldDelegate.time != time || oldDelegate.program != program;
   }
 }
