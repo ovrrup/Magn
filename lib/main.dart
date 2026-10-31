@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -16,10 +20,10 @@ void main() {
 
 enum AppMode {
   endless,
-  pomodoro,
+  cycle,
 }
 
-enum PomodoroPhase {
+enum CyclePhase {
   focus,
   shortBreak,
   longBreak,
@@ -39,6 +43,7 @@ class SessionRecord {
   final DateTime timestamp;
   final AppMode mode;
   final int interruptions;
+  final String? linkedTaskId;
 
   const SessionRecord({
     required this.id,
@@ -47,6 +52,7 @@ class SessionRecord {
     required this.timestamp,
     required this.mode,
     this.interruptions = 0,
+    this.linkedTaskId,
   });
 
   Map<String, dynamic> toJson() => {
@@ -56,6 +62,7 @@ class SessionRecord {
         'timestamp': timestamp.toIso8601String(),
         'mode': mode.name,
         'interruptions': interruptions,
+        if (linkedTaskId != null) 'linkedTaskId': linkedTaskId,
       };
 
   factory SessionRecord.fromJson(Map<String, dynamic> json) => SessionRecord(
@@ -65,8 +72,69 @@ class SessionRecord {
         timestamp: json['timestamp'] != null
             ? DateTime.tryParse(json['timestamp'] as String) ?? DateTime.now()
             : DateTime.now(),
-        mode: json['mode'] == 'pomodoro' ? AppMode.pomodoro : AppMode.endless,
+        mode: json['mode'] == 'cycle' ? AppMode.cycle : AppMode.endless,
         interruptions: json['interruptions'] as int? ?? 0,
+        linkedTaskId: json['linkedTaskId'] as String?,
+      );
+}
+
+/// A focus task item with focus and flow telemetry.
+class TaskItem {
+  final String id;
+  final String title;
+  final bool isCompleted;
+  final bool isDeferred; // Not Today
+  final int focusSeconds;
+  final int flowSeconds;
+  final DateTime createdAt;
+
+  const TaskItem({
+    required this.id,
+    required this.title,
+    this.isCompleted = false,
+    this.isDeferred = false,
+    this.focusSeconds = 0,
+    this.flowSeconds = 0,
+    required this.createdAt,
+  });
+
+  TaskItem copyWith({
+    String? title,
+    bool? isCompleted,
+    bool? isDeferred,
+    int? focusSeconds,
+    int? flowSeconds,
+  }) =>
+      TaskItem(
+        id: id,
+        title: title ?? this.title,
+        isCompleted: isCompleted ?? this.isCompleted,
+        isDeferred: isDeferred ?? this.isDeferred,
+        focusSeconds: focusSeconds ?? this.focusSeconds,
+        flowSeconds: flowSeconds ?? this.flowSeconds,
+        createdAt: createdAt,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'isCompleted': isCompleted,
+        'isDeferred': isDeferred,
+        'focusSeconds': focusSeconds,
+        'flowSeconds': flowSeconds,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  factory TaskItem.fromJson(Map<String, dynamic> json) => TaskItem(
+        id: json['id'] as String? ?? UniqueKey().toString(),
+        title: json['title'] as String? ?? '',
+        isCompleted: json['isCompleted'] as bool? ?? false,
+        isDeferred: json['isDeferred'] as bool? ?? false,
+        focusSeconds: json['focusSeconds'] as int? ?? 0,
+        flowSeconds: json['flowSeconds'] as int? ?? 0,
+        createdAt: json['createdAt'] != null
+            ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
+            : DateTime.now(),
       );
 }
 
@@ -173,7 +241,8 @@ class AppPalette {
     required Brightness systemBrightness,
   }) {
     final isDark = option == ThemeModeOption.dark ||
-        (option == ThemeModeOption.system && systemBrightness == Brightness.dark);
+        (option == ThemeModeOption.system &&
+            systemBrightness == Brightness.dark);
     if (isDark) {
       return isOled ? oled : dark;
     }
@@ -204,27 +273,45 @@ class FocusController extends ChangeNotifier with WidgetsBindingObserver {
   int _endlessElapsedMs = 0;
   int get endlessElapsedMs => _endlessElapsedMs;
 
-  // Pomodoro State Machine
+  // Cycle Mode State Machine
   static const int _focusDurationSec = 25 * 60;
   static const int _shortBreakDurationSec = 5 * 60;
   static const int _longBreakDurationSec = 15 * 60;
 
-  int _pomodoroCycle = 1; // 1 to 4
-  int get pomodoroCycle => _pomodoroCycle;
+  int _cycleIndex = 1; // 1 to 4
+  int get cycleIndex => _cycleIndex;
 
-  PomodoroPhase _pomodoroPhase = PomodoroPhase.focus;
-  PomodoroPhase get pomodoroPhase => _pomodoroPhase;
+  CyclePhase _cyclePhase = CyclePhase.focus;
+  CyclePhase get cyclePhase => _cyclePhase;
 
-  int _pomodoroRemainingSeconds = _focusDurationSec;
-  int get pomodoroRemainingSeconds => _pomodoroRemainingSeconds;
+  int _cycleRemainingSeconds = _focusDurationSec;
+  int get cycleRemainingSeconds => _cycleRemainingSeconds;
 
   // Lifecycle Interruption Tracking
   int _sessionInterruptions = 0;
   int get sessionInterruptions => _sessionInterruptions;
 
-  // Historical Session Records
+  // Linked Task Tracking
+  String? _linkedTaskId;
+  String? get linkedTaskId => _linkedTaskId;
+
+  // Historical Session Records & Tasks
   final List<SessionRecord> _sessions = [];
   List<SessionRecord> get sessions => List.unmodifiable(_sessions);
+
+  final List<TaskItem> _tasks = [];
+  List<TaskItem> get tasks => List.unmodifiable(_tasks);
+
+  TaskItem? get linkedTask {
+    if (_linkedTaskId == null) return null;
+    for (final t in _tasks) {
+      if (t.id == _linkedTaskId) return t;
+    }
+    return null;
+  }
+
+  int get pendingTaskCount =>
+      _tasks.where((t) => !t.isCompleted && !t.isDeferred).length;
 
   FocusController() {
     WidgetsBinding.instance.addObserver(this);
@@ -249,8 +336,6 @@ class FocusController extends ChangeNotifier with WidgetsBindingObserver {
 
   // --- Flow Calibration Engine ---
 
-  /// Computes personalized Ignition Threshold T_flow in seconds.
-  /// 85th percentile of Friction Zone durations blended with 32% of median deep session length.
   int get personalizedIgnitionThreshold {
     if (_sessions.isEmpty) return 600; // 10 minutes default
 
@@ -289,25 +374,25 @@ class FocusController extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     final blended = (0.68 * p85) + (0.32 * medianDeep);
-    return blended.round().clamp(300, 1500); // Clamped between 5m and 25m
+    return blended.round().clamp(300, 1500); // 5m to 25m
   }
 
   int get currentElapsedSeconds {
     if (_mode == AppMode.endless) {
       return _endlessElapsedMs ~/ 1000;
     } else {
-      final totalPhaseSec = _pomodoroPhase == PomodoroPhase.focus
+      final totalPhaseSec = _cyclePhase == CyclePhase.focus
           ? _focusDurationSec
-          : (_pomodoroPhase == PomodoroPhase.shortBreak
+          : (_cyclePhase == CyclePhase.shortBreak
               ? _shortBreakDurationSec
               : _longBreakDurationSec);
-      return totalPhaseSec - _pomodoroRemainingSeconds;
+      return totalPhaseSec - _cycleRemainingSeconds;
     }
   }
 
   int get currentFlowSeconds {
     if (!_isRunning) return 0;
-    if (_mode == AppMode.pomodoro && _pomodoroPhase != PomodoroPhase.focus) {
+    if (_mode == AppMode.cycle && _cyclePhase != CyclePhase.focus) {
       return 0;
     }
     final elapsed = currentElapsedSeconds;
@@ -336,6 +421,63 @@ class FocusController extends ChangeNotifier with WidgetsBindingObserver {
     if (_sessions.isEmpty) return 15;
     final score = 15 + (_sessions.length * 9);
     return score.clamp(15, 98);
+  }
+
+  // --- Task Operations ---
+
+  void addTask(String title) {
+    final clean = title.trim();
+    if (clean.isEmpty) return;
+    final task = TaskItem(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: clean,
+      createdAt: DateTime.now(),
+    );
+    _tasks.insert(0, task);
+    _saveData();
+    notifyListeners();
+  }
+
+  void toggleTaskComplete(String id) {
+    final index = _tasks.indexWhere((t) => t.id == id);
+    if (index != -1) {
+      final t = _tasks[index];
+      _tasks[index] = t.copyWith(isCompleted: !t.isCompleted);
+      if (_linkedTaskId == id && !t.isCompleted) {
+        _linkedTaskId = null;
+      }
+      _saveData();
+      notifyListeners();
+    }
+  }
+
+  void toggleTaskDeferred(String id) {
+    final index = _tasks.indexWhere((t) => t.id == id);
+    if (index != -1) {
+      final t = _tasks[index];
+      _tasks[index] = t.copyWith(isDeferred: !t.isDeferred);
+      if (_linkedTaskId == id && !t.isDeferred) {
+        _linkedTaskId = null;
+      }
+      _saveData();
+      notifyListeners();
+    }
+  }
+
+  void linkTask(String id) {
+    if (_linkedTaskId == id) {
+      _linkedTaskId = null;
+    } else {
+      _linkedTaskId = id;
+    }
+    notifyListeners();
+  }
+
+  void deleteTask(String id) {
+    _tasks.removeWhere((t) => t.id == id);
+    if (_linkedTaskId == id) _linkedTaskId = null;
+    _saveData();
+    notifyListeners();
   }
 
   // --- Controls ---
@@ -368,11 +510,11 @@ class FocusController extends ChangeNotifier with WidgetsBindingObserver {
       });
     } else {
       _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (_pomodoroRemainingSeconds > 0) {
-          _pomodoroRemainingSeconds--;
+        if (_cycleRemainingSeconds > 0) {
+          _cycleRemainingSeconds--;
           notifyListeners();
         } else {
-          _onPomodoroPhaseComplete();
+          _onCyclePhaseComplete();
         }
       });
     }
@@ -387,12 +529,12 @@ class FocusController extends ChangeNotifier with WidgetsBindingObserver {
     final durationSec = currentElapsedSeconds;
     if (durationSec >= 1) {
       final tFlow = personalizedIgnitionThreshold;
-      final flowSec = (_mode == AppMode.endless ||
-              _pomodoroPhase == PomodoroPhase.focus)
-          ? ((durationSec > tFlow && _sessionInterruptions == 0)
-              ? (durationSec - tFlow)
-              : 0)
-          : 0;
+      final flowSec =
+          (_mode == AppMode.endless || _cyclePhase == CyclePhase.focus)
+              ? ((durationSec > tFlow && _sessionInterruptions == 0)
+                  ? (durationSec - tFlow)
+                  : 0)
+              : 0;
 
       final session = SessionRecord(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -401,16 +543,30 @@ class FocusController extends ChangeNotifier with WidgetsBindingObserver {
         timestamp: DateTime.now(),
         mode: _mode,
         interruptions: _sessionInterruptions,
+        linkedTaskId: _linkedTaskId,
       );
       _sessions.insert(0, session);
+
+      // Accumulate metrics on linked task
+      if (_linkedTaskId != null) {
+        final tIndex = _tasks.indexWhere((t) => t.id == _linkedTaskId);
+        if (tIndex != -1) {
+          final t = _tasks[tIndex];
+          _tasks[tIndex] = t.copyWith(
+            focusSeconds: t.focusSeconds + durationSec,
+            flowSeconds: t.flowSeconds + flowSec,
+          );
+        }
+      }
+
       _saveData();
     }
 
     _endlessElapsedMs = 0;
-    if (_mode == AppMode.pomodoro) {
-      _pomodoroRemainingSeconds = _pomodoroPhase == PomodoroPhase.focus
+    if (_mode == AppMode.cycle) {
+      _cycleRemainingSeconds = _cyclePhase == CyclePhase.focus
           ? _focusDurationSec
-          : (_pomodoroPhase == PomodoroPhase.shortBreak
+          : (_cyclePhase == CyclePhase.shortBreak
               ? _shortBreakDurationSec
               : _longBreakDurationSec);
     }
@@ -418,28 +574,28 @@ class FocusController extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  void skipPomodoroPhase() {
-    if (_mode != AppMode.pomodoro) return;
-    _onPomodoroPhaseComplete(userInitiated: true);
+  void skipCyclePhase() {
+    if (_mode != AppMode.cycle) return;
+    _onCyclePhaseComplete(userInitiated: true);
   }
 
-  void _onPomodoroPhaseComplete({bool userInitiated = false}) {
-    if (_pomodoroPhase == PomodoroPhase.focus) {
-      if (_pomodoroCycle < 4) {
-        _pomodoroPhase = PomodoroPhase.shortBreak;
-        _pomodoroRemainingSeconds = _shortBreakDurationSec;
+  void _onCyclePhaseComplete({bool userInitiated = false}) {
+    if (_cyclePhase == CyclePhase.focus) {
+      if (_cycleIndex < 4) {
+        _cyclePhase = CyclePhase.shortBreak;
+        _cycleRemainingSeconds = _shortBreakDurationSec;
       } else {
-        _pomodoroPhase = PomodoroPhase.longBreak;
-        _pomodoroRemainingSeconds = _longBreakDurationSec;
+        _cyclePhase = CyclePhase.longBreak;
+        _cycleRemainingSeconds = _longBreakDurationSec;
       }
-    } else if (_pomodoroPhase == PomodoroPhase.shortBreak) {
-      _pomodoroCycle++;
-      _pomodoroPhase = PomodoroPhase.focus;
-      _pomodoroRemainingSeconds = _focusDurationSec;
-    } else if (_pomodoroPhase == PomodoroPhase.longBreak) {
-      _pomodoroCycle = 1;
-      _pomodoroPhase = PomodoroPhase.focus;
-      _pomodoroRemainingSeconds = _focusDurationSec;
+    } else if (_cyclePhase == CyclePhase.shortBreak) {
+      _cycleIndex++;
+      _cyclePhase = CyclePhase.focus;
+      _cycleRemainingSeconds = _focusDurationSec;
+    } else if (_cyclePhase == CyclePhase.longBreak) {
+      _cycleIndex = 1;
+      _cyclePhase = CyclePhase.focus;
+      _cycleRemainingSeconds = _focusDurationSec;
     }
 
     if (!userInitiated) {
@@ -463,7 +619,7 @@ class FocusController extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  // --- Persistence ---
+  // --- Persistence & Backup ---
 
   Future<void> _loadData() async {
     try {
@@ -481,10 +637,16 @@ class FocusController extends ChangeNotifier with WidgetsBindingObserver {
           _sessions.add(SessionRecord.fromJson(item as Map<String, dynamic>));
         }
       }
+      final tasksJson = prefs.getString('magn_tasks');
+      if (tasksJson != null) {
+        final list = jsonDecode(tasksJson) as List<dynamic>;
+        _tasks.clear();
+        for (final item in list) {
+          _tasks.add(TaskItem.fromJson(item as Map<String, dynamic>));
+        }
+      }
       notifyListeners();
-    } catch (_) {
-      // Graceful fallback to default values
-    }
+    } catch (_) {}
   }
 
   Future<void> _saveData() async {
@@ -495,46 +657,141 @@ class FocusController extends ChangeNotifier with WidgetsBindingObserver {
         'magn_sessions',
         jsonEncode(_sessions.map((s) => s.toJson()).toList()),
       );
+      await prefs.setString(
+        'magn_tasks',
+        jsonEncode(_tasks.map((t) => t.toJson()).toList()),
+      );
     } catch (_) {}
   }
 
-  String exportJson() {
-    return jsonEncode({
-      'version': 1,
+  String exportFullJson() {
+    return const JsonEncoder.withIndent('  ').convert({
+      'schemaVersion': 1,
       'exportedAt': DateTime.now().toIso8601String(),
       'settings': _settings.toJson(),
       'sessions': _sessions.map((s) => s.toJson()).toList(),
+      'tasks': _tasks.map((t) => t.toJson()).toList(),
     });
   }
 
-  bool importJson(String rawJson) {
-    try {
-      final map = jsonDecode(rawJson) as Map<String, dynamic>;
-      if (map.containsKey('settings')) {
-        _settings =
-            AppSettings.fromJson(map['settings'] as Map<String, dynamic>);
-      }
-      if (map.containsKey('sessions')) {
-        final list = map['sessions'] as List<dynamic>;
-        _sessions.clear();
-        for (final item in list) {
-          _sessions.add(SessionRecord.fromJson(item as Map<String, dynamic>));
-        }
-      }
-      _saveData();
-      notifyListeners();
-      return true;
-    } catch (_) {
-      return false;
+  Map<String, dynamic> validateBackupJson(String content) {
+    final dynamic decoded = jsonDecode(content);
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Root JSON must be an object');
     }
+    if (decoded['schemaVersion'] is! int) {
+      throw const FormatException('schemaVersion must be an integer');
+    }
+    if (decoded.containsKey('settings') && decoded['settings'] is! Map) {
+      throw const FormatException('settings must be a JSON object');
+    }
+
+    int sessionCount = 0;
+    if (decoded.containsKey('sessions')) {
+      final list = decoded['sessions'];
+      if (list is! List) {
+        throw const FormatException('sessions must be a list');
+      }
+      for (final item in list) {
+        if (item is! Map) {
+          throw const FormatException('Every session record must be an object');
+        }
+        final dur = item['durationSeconds'];
+        final flow = item['flowSeconds'];
+        if (dur is! int || dur < 0) {
+          throw const FormatException(
+              'durationSeconds must be a non-negative integer');
+        }
+        if (flow is! int || flow < 0) {
+          throw const FormatException(
+              'flowSeconds must be a non-negative integer');
+        }
+        if (item['timestamp'] == null ||
+            DateTime.tryParse(item['timestamp'].toString()) == null) {
+          throw const FormatException('Invalid timestamp in session record');
+        }
+        sessionCount++;
+      }
+    }
+
+    int taskCount = 0;
+    if (decoded.containsKey('tasks')) {
+      final list = decoded['tasks'];
+      if (list is! List) {
+        throw const FormatException('tasks must be a list');
+      }
+      for (final item in list) {
+        if (item is! Map) {
+          throw const FormatException('Every task item must be an object');
+        }
+        if (item['title'] == null || item['title'].toString().trim().isEmpty) {
+          throw const FormatException('Task item must contain a title');
+        }
+        taskCount++;
+      }
+    }
+
+    return {
+      'raw': decoded,
+      'sessionCount': sessionCount,
+      'taskCount': taskCount,
+    };
+  }
+
+  void restoreBackup(Map<String, dynamic> raw, {required bool merge}) {
+    if (raw.containsKey('settings')) {
+      _settings =
+          AppSettings.fromJson(raw['settings'] as Map<String, dynamic>);
+    }
+
+    if (raw.containsKey('sessions')) {
+      final list = raw['sessions'] as List<dynamic>;
+      final parsed =
+          list.map((e) => SessionRecord.fromJson(e as Map<String, dynamic>));
+      if (merge) {
+        final existingIds = _sessions.map((s) => s.id).toSet();
+        for (final s in parsed) {
+          if (!existingIds.contains(s.id)) {
+            _sessions.add(s);
+          }
+        }
+        _sessions.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      } else {
+        _sessions.clear();
+        _sessions.addAll(parsed);
+      }
+    }
+
+    if (raw.containsKey('tasks')) {
+      final list = raw['tasks'] as List<dynamic>;
+      final parsed =
+          list.map((e) => TaskItem.fromJson(e as Map<String, dynamic>));
+      if (merge) {
+        final existingIds = _tasks.map((t) => t.id).toSet();
+        for (final t in parsed) {
+          if (!existingIds.contains(t.id)) {
+            _tasks.add(t);
+          }
+        }
+      } else {
+        _tasks.clear();
+        _tasks.addAll(parsed);
+      }
+    }
+
+    _saveData();
+    notifyListeners();
   }
 
   Future<void> resetAllData() async {
     _sessions.clear();
+    _tasks.clear();
+    _linkedTaskId = null;
     _settings = const AppSettings();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('magn_settings');
     await prefs.remove('magn_sessions');
+    await prefs.remove('magn_tasks');
     notifyListeners();
   }
 }
@@ -607,7 +864,7 @@ class _StopwatchAppState extends State<StopwatchApp> {
   }
 }
 
-/// The flat, wordless main workspace screen.
+/// The main workspace screen with upper 62% controls and bottom task peek sheet.
 class MainWorkspaceScreen extends StatelessWidget {
   final FocusController controller;
   final AppPalette palette;
@@ -650,40 +907,84 @@ class MainWorkspaceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final upperHeight = screenHeight * 0.62;
+    final isRunning = controller.isRunning;
+    final minSheetSize = isRunning ? 0.05 : 0.19;
+
     return Scaffold(
       backgroundColor: palette.background,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Top Bar
-            Align(
-              alignment: Alignment.topCenter,
-              child: _TopBar(
-                controller: controller,
-                palette: palette,
-                onOpenAnalytics: () => _openAnalytics(context),
-                onOpenSettings: () => _openSettings(context),
+      body: Stack(
+        children: [
+          // Upper 62%: Top bar, Center stage, and Play/Stop controls
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: upperHeight,
+            child: SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  _TopBar(
+                    controller: controller,
+                    palette: palette,
+                    onOpenAnalytics: () => _openAnalytics(context),
+                    onOpenSettings: () => _openSettings(context),
+                  ),
+                  const Spacer(),
+                  _CenterStage(
+                    controller: controller,
+                    palette: palette,
+                  ),
+                  const Spacer(),
+                  _BottomControls(
+                    controller: controller,
+                    palette: palette,
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
             ),
+          ),
 
-            // Center Stage
-            Center(
-              child: _CenterStage(
-                controller: controller,
-                palette: palette,
+          // Floating Hint Row directly above the top edge of the sheet
+          Positioned(
+            bottom: (screenHeight * minSheetSize) + 8,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.keyboard_arrow_up_rounded,
+                    size: 18,
+                    color: palette.secondaryText,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    controller.pendingTaskCount > 0
+                        ? '${controller.pendingTaskCount} pending tasks'
+                        : 'No pending tasks',
+                    style: TextStyle(
+                      color: palette.secondaryText,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
 
-            // Bottom Controls (56px from bottom)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: _BottomControls(
-                controller: controller,
-                palette: palette,
-              ),
-            ),
-          ],
-        ),
+          // Pull-Up Task Peek Sheet at the bottom
+          _TaskPeekSheet(
+            controller: controller,
+            palette: palette,
+            minSize: minSheetSize,
+          ),
+        ],
       ),
     );
   }
@@ -716,7 +1017,7 @@ class _TopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Top-Left Icon-Only Segmented Pill
+          // Top-Left Icon-Only Segmented Pill (Endless vs Cycle Mode)
           Opacity(
             opacity: isRunning ? 0.4 : 1.0,
             child: Container(
@@ -751,11 +1052,11 @@ class _TopBar extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Pomodoro Mode Segment
+                  // Cycle Mode Segment
                   GestureDetector(
                     onTap: isRunning
                         ? null
-                        : () => controller.setMode(AppMode.pomodoro),
+                        : () => controller.setMode(AppMode.cycle),
                     behavior: HitTestBehavior.opaque,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -824,7 +1125,7 @@ class _TopBar extends StatelessWidget {
 }
 
 // ----------------------------------------------------------------------------
-// Center Stage Widget
+// Center Stage & Tactile Rotating Dial CustomPainter
 // ----------------------------------------------------------------------------
 
 class _CenterStage extends StatelessWidget {
@@ -839,29 +1140,21 @@ class _CenterStage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!controller.settings.showDigits) {
-      // Flat 2px Stroke Circle
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.easeInOut,
-            width: 160,
-            height: 160,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: controller.isInFlow
-                    ? palette.accent
-                    : palette.secondaryText,
-                width: 2,
-              ),
-            ),
+          RotaryDialView(
+            isRunning: controller.isRunning,
+            isInFlow: controller.isInFlow,
+            currentElapsedSeconds: controller.currentElapsedSeconds,
+            personalizedIgnitionThreshold:
+                controller.personalizedIgnitionThreshold,
+            palette: palette,
           ),
-          if (controller.mode == AppMode.pomodoro) ...[
-            const SizedBox(height: 24),
-            _PomodoroDots(
-              currentCycle: controller.pomodoroCycle,
+          if (controller.mode == AppMode.cycle) ...[
+            const SizedBox(height: 16),
+            _CycleDots(
+              currentCycle: controller.cycleIndex,
               palette: palette,
             ),
           ],
@@ -905,7 +1198,7 @@ class _CenterStage extends StatelessWidget {
           )
         else
           Text(
-            _formatElapsedTime(controller.pomodoroRemainingSeconds),
+            _formatElapsedTime(controller.cycleRemainingSeconds),
             style: TextStyle(
               color: palette.primaryText,
               fontSize: 68,
@@ -913,10 +1206,10 @@ class _CenterStage extends StatelessWidget {
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
-        if (controller.mode == AppMode.pomodoro) ...[
-          const SizedBox(height: 24),
-          _PomodoroDots(
-            currentCycle: controller.pomodoroCycle,
+        if (controller.mode == AppMode.cycle) ...[
+          const SizedBox(height: 16),
+          _CycleDots(
+            currentCycle: controller.cycleIndex,
             palette: palette,
           ),
         ],
@@ -925,11 +1218,233 @@ class _CenterStage extends StatelessWidget {
   }
 }
 
-class _PomodoroDots extends StatelessWidget {
+/// Tactile rotating dial driven by a 12-second repeating AnimationController.
+class RotaryDialView extends StatefulWidget {
+  final bool isRunning;
+  final bool isInFlow;
+  final int currentElapsedSeconds;
+  final int personalizedIgnitionThreshold;
+  final AppPalette palette;
+
+  const RotaryDialView({
+    super.key,
+    required this.isRunning,
+    required this.isInFlow,
+    required this.currentElapsedSeconds,
+    required this.personalizedIgnitionThreshold,
+    required this.palette,
+  });
+
+  @override
+  State<RotaryDialView> createState() => _RotaryDialViewState();
+}
+
+class _RotaryDialViewState extends State<RotaryDialView>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _dialController;
+
+  @override
+  void initState() {
+    super.initState();
+    _dialController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 12),
+    );
+    if (widget.isRunning) {
+      _dialController.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(RotaryDialView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isRunning != oldWidget.isRunning) {
+      if (widget.isRunning) {
+        _dialController.repeat();
+      } else {
+        _dialController.stop();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _dialController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _dialController,
+      builder: (context, _) {
+        return CustomPaint(
+          size: const Size(260, 260),
+          painter: _RotaryDialPainter(
+            rotationAngle: _dialController.value * 2 * math.pi,
+            isInFlow: widget.isInFlow,
+            currentElapsedSeconds: widget.currentElapsedSeconds,
+            personalizedIgnitionThreshold:
+                widget.personalizedIgnitionThreshold,
+            palette: widget.palette,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RotaryDialPainter extends CustomPainter {
+  final double rotationAngle;
+  final bool isInFlow;
+  final int currentElapsedSeconds;
+  final int personalizedIgnitionThreshold;
+  final AppPalette palette;
+
+  const _RotaryDialPainter({
+    required this.rotationAngle,
+    required this.isInFlow,
+    required this.currentElapsedSeconds,
+    required this.personalizedIgnitionThreshold,
+    required this.palette,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+
+    // 1. Stationary outer ring of 36 tiny 2px circular tick dots spaced every 10 degrees at radius 122px
+    const tickRadius = 122.0;
+    final progress = isInFlow
+        ? 1.0
+        : (personalizedIgnitionThreshold > 0
+            ? (currentElapsedSeconds / personalizedIgnitionThreshold)
+                .clamp(0.0, 1.0)
+            : 0.0);
+    final activeTicks = isInFlow ? 36 : (progress * 36).floor();
+
+    for (int i = 0; i < 36; i++) {
+      final angle = (i * 10.0) * math.pi / 180.0;
+      final tickPos = Offset(
+        c.dx + tickRadius * math.cos(angle),
+        c.dy + tickRadius * math.sin(angle),
+      );
+      final isAccent = i < activeTicks;
+      canvas.drawCircle(
+        tickPos,
+        1.0, // 2px diameter
+        Paint()
+          ..color = isAccent ? palette.accent : palette.border
+          ..style = PaintingStyle.fill,
+      );
+    }
+
+    // 2. Stationary 212px diameter circular platter in solid surface color with 1px border
+    const platterRadius = 106.0;
+    canvas.drawCircle(
+      c,
+      platterRadius,
+      Paint()
+        ..color = palette.surface
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawCircle(
+      c,
+      platterRadius,
+      Paint()
+        ..color = palette.border
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0,
+    );
+
+    // 3. Rotating Canvas Layer
+    canvas.save();
+    canvas.translate(c.dx, c.dy);
+    canvas.rotate(rotationAngle);
+
+    // Asymmetric high-contrast inner rotor lobe in primaryText color
+    // A circle of radius 60px offset by 8px with a smooth sweeping lobe reaching radius 92px
+    const lobeCenter = Offset(8, 0);
+    const baseR = 60.0;
+    final lobePath = Path();
+    lobePath.moveTo(lobeCenter.dx, lobeCenter.dy - baseR);
+    lobePath.arcTo(
+      Rect.fromCircle(center: lobeCenter, radius: baseR),
+      -math.pi / 2,
+      math.pi,
+      false,
+    );
+    lobePath.quadraticBezierTo(92, 36, 92, 0);
+    lobePath.quadraticBezierTo(92, -36, lobeCenter.dx, lobeCenter.dy - baseR);
+    lobePath.close();
+
+    canvas.drawPath(
+      lobePath,
+      Paint()
+        ..color = palette.primaryText
+        ..style = PaintingStyle.fill,
+    );
+
+    // 3 pill-shaped radial capsule index markers (16px long, 5px wide, borderRadius 2.5px at 0, 135, 240 deg)
+    for (final deg in [0.0, 135.0, 240.0]) {
+      final rad = deg * math.pi / 180.0;
+      canvas.save();
+      canvas.rotate(rad);
+      canvas.translate(80, 0);
+      final rrect = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset.zero, width: 16, height: 5),
+        const Radius.circular(2.5),
+      );
+      canvas.drawRRect(
+        rrect,
+        Paint()
+          ..color = palette.surface
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawRRect(
+        rrect,
+        Paint()
+          ..color = palette.border
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.8,
+      );
+      canvas.restore();
+    }
+
+    // 24px center spindle circle (radius 12px) in surface color, shifting to accent in Flow State
+    canvas.drawCircle(
+      Offset.zero,
+      12.0,
+      Paint()
+        ..color = isInFlow ? palette.accent : palette.surface
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawCircle(
+      Offset.zero,
+      12.0,
+      Paint()
+        ..color = palette.border
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0,
+    );
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _RotaryDialPainter oldDelegate) {
+    return oldDelegate.rotationAngle != rotationAngle ||
+        oldDelegate.isInFlow != isInFlow ||
+        oldDelegate.currentElapsedSeconds != currentElapsedSeconds ||
+        oldDelegate.palette != palette;
+  }
+}
+
+class _CycleDots extends StatelessWidget {
   final int currentCycle;
   final AppPalette palette;
 
-  const _PomodoroDots({
+  const _CycleDots({
     required this.currentCycle,
     required this.palette,
   });
@@ -970,61 +1485,485 @@ class _BottomControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isRunning = controller.isRunning;
-    final isPomodoro = controller.mode == AppMode.pomodoro;
+    final isCycle = controller.mode == AppMode.cycle;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 56.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Primary Pill Button (Height 60, Width 120, Radius 30)
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Primary Pill Button (Height 60, Width 120, Radius 30)
+        GestureDetector(
+          onTap: controller.toggleTimer,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            height: 60,
+            width: 120,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              color: isRunning ? palette.surface : palette.accent,
+              border:
+                  isRunning ? Border.all(color: palette.accent, width: 1) : null,
+            ),
+            child: Center(
+              child: Icon(
+                isRunning ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                size: 32,
+                color: isRunning ? palette.accent : palette.background,
+              ),
+            ),
+          ),
+        ),
+
+        // Secondary Cycle Phase Skip Button (48px circular)
+        if (isCycle) ...[
+          const SizedBox(width: 16),
           GestureDetector(
-            onTap: controller.toggleTimer,
+            onTap: controller.skipCyclePhase,
             behavior: HitTestBehavior.opaque,
             child: Container(
-              height: 60,
-              width: 120,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                color: isRunning ? palette.surface : palette.accent,
-                border: isRunning
-                    ? Border.all(color: palette.accent, width: 1)
-                    : null,
+                shape: BoxShape.circle,
+                color: palette.surface,
+                border: Border.all(color: palette.border, width: 1),
               ),
               child: Center(
                 child: Icon(
-                  isRunning ? Icons.stop_rounded : Icons.play_arrow_rounded,
-                  size: 32,
-                  color: isRunning ? palette.accent : palette.background,
+                  Icons.skip_next_rounded,
+                  size: 24,
+                  color: palette.primaryText,
                 ),
               ),
             ),
           ),
+        ],
+      ],
+    );
+  }
+}
 
-          // Secondary Pomodoro Phase Skip Button (48px circular)
-          if (isPomodoro) ...[
-            const SizedBox(width: 16),
-            GestureDetector(
-              onTap: controller.skipPomodoroPhase,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: palette.surface,
-                  border: Border.all(color: palette.border, width: 1),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.skip_next_rounded,
-                    size: 24,
-                    color: palette.primaryText,
+// ----------------------------------------------------------------------------
+// Non-Intrusive Pull-Up Task Peek Sheet
+// ----------------------------------------------------------------------------
+
+class _TaskPeekSheet extends StatefulWidget {
+  final FocusController controller;
+  final AppPalette palette;
+  final double minSize;
+
+  const _TaskPeekSheet({
+    required this.controller,
+    required this.palette,
+    required this.minSize,
+  });
+
+  @override
+  State<_TaskPeekSheet> createState() => _TaskPeekSheetState();
+}
+
+class _TaskPeekSheetState extends State<_TaskPeekSheet> {
+  final TextEditingController _taskInputController = TextEditingController();
+
+  @override
+  void dispose() {
+    _taskInputController.dispose();
+    super.dispose();
+  }
+
+  void _submitTask() {
+    final text = _taskInputController.text;
+    if (text.trim().isNotEmpty) {
+      widget.controller.addTask(text);
+      _taskInputController.clear();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+    final palette = widget.palette;
+    final linkedTask = controller.linkedTask;
+
+    final activeTasks =
+        controller.tasks.where((t) => !t.isCompleted && !t.isDeferred).toList();
+    final deferredTasks =
+        controller.tasks.where((t) => !t.isCompleted && t.isDeferred).toList();
+    final completedTasks =
+        controller.tasks.where((t) => t.isCompleted).toList();
+
+    return DraggableScrollableSheet(
+      minChildSize: widget.minSize,
+      initialChildSize: widget.minSize,
+      maxChildSize: 0.78,
+      snap: true,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: palette.surface,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(32)),
+            border: Border(
+              top: BorderSide(color: palette.border, width: 1),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Top drag handle pill (36px wide, 4px high, borderRadius 2px)
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 10, bottom: 6),
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: palette.border,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
+
+              // Collapsed Peek Header
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: linkedTask != null
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: palette.accent,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        linkedTask.title,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: palette.primaryText,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                GestureDetector(
+                                  onTap: () =>
+                                      controller.linkTask(linkedTask.id),
+                                  child: Text(
+                                    'Linked • Tap to unlink',
+                                    style: TextStyle(
+                                      color: palette.secondaryText,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              'Pull up to choose or skip tasks',
+                              style: TextStyle(
+                                color: palette.primaryText,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(width: 12),
+                    _StackedCardCounter(
+                      count: controller.pendingTaskCount,
+                      palette: palette,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Expanded Task Lists
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  children: [
+                    // Task Input Field
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: palette.background,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: palette.border, width: 1),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _taskInputController,
+                              style: TextStyle(
+                                  color: palette.primaryText, fontSize: 14),
+                              decoration: InputDecoration(
+                                hintText: 'Add a task for today...',
+                                hintStyle:
+                                    TextStyle(color: palette.secondaryText),
+                                border: InputBorder.none,
+                              ),
+                              onSubmitted: (_) => _submitTask(),
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.add_rounded,
+                                color: palette.accent, size: 22),
+                            onPressed: _submitTask,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Active Today Section
+                    _sectionHeader(
+                        'Active Today (${activeTasks.length})', palette),
+                    if (activeTasks.isEmpty)
+                      _emptyMessage('No active tasks. Tap + to add one.', palette)
+                    else
+                      ...activeTasks.map((t) => _taskRow(t, controller, palette)),
+
+                    const SizedBox(height: 18),
+
+                    // Not Today (Deferred) Section
+                    if (deferredTasks.isNotEmpty) ...[
+                      _sectionHeader(
+                          'Not Today (${deferredTasks.length})', palette),
+                      ...deferredTasks
+                          .map((t) => _taskRow(t, controller, palette)),
+                      const SizedBox(height: 18),
+                    ],
+
+                    // Completed Section
+                    if (completedTasks.isNotEmpty) ...[
+                      _sectionHeader(
+                          'Completed (${completedTasks.length})', palette),
+                      ...completedTasks
+                          .map((t) => _taskRow(t, controller, palette)),
+                      const SizedBox(height: 18),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _sectionHeader(String title, AppPalette palette) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: palette.secondaryText,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _emptyMessage(String text, AppPalette palette) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        text,
+        style: TextStyle(color: palette.secondaryText, fontSize: 13),
+      ),
+    );
+  }
+
+  Widget _taskRow(
+      TaskItem task, FocusController controller, AppPalette palette) {
+    final isLinked = controller.linkedTaskId == task.id;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isLinked
+            ? palette.accent.withValues(alpha: 0.08)
+            : palette.background,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isLinked ? palette.accent : palette.border,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Completion Check Circle
+          GestureDetector(
+            onTap: () => controller.toggleTaskComplete(task.id),
+            child: Icon(
+              task.isCompleted
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              color: task.isCompleted ? palette.accent : palette.secondaryText,
+              size: 20,
             ),
-          ],
+          ),
+          const SizedBox(width: 10),
+
+          // Title & Telemetry (tap to link/unlink)
+          Expanded(
+            child: GestureDetector(
+              onTap: () => controller.linkTask(task.id),
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    task.title,
+                    style: TextStyle(
+                      color: task.isCompleted
+                          ? palette.secondaryText
+                          : palette.primaryText,
+                      fontSize: 14,
+                      fontWeight:
+                          isLinked ? FontWeight.w600 : FontWeight.normal,
+                      decoration: task.isCompleted
+                          ? TextDecoration.lineThrough
+                          : null,
+                    ),
+                  ),
+                  if (task.focusSeconds > 0)
+                    Text(
+                      '${task.focusSeconds ~/ 60}m focus'
+                      '${task.flowSeconds > 0 ? " • ${task.flowSeconds ~/ 60}m flow" : ""}',
+                      style: TextStyle(
+                        color: palette.secondaryText,
+                        fontSize: 11,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          // 1-Tap Defer button (Icons.low_priority_rounded)
+          if (!task.isCompleted)
+            IconButton(
+              icon: Icon(
+                task.isDeferred
+                    ? Icons.today_rounded
+                    : Icons.low_priority_rounded,
+                size: 18,
+                color: palette.secondaryText,
+              ),
+              onPressed: () => controller.toggleTaskDeferred(task.id),
+            ),
+
+          // Delete button
+          IconButton(
+            icon: Icon(
+              Icons.close_rounded,
+              size: 16,
+              color: palette.secondaryText,
+            ),
+            onPressed: () => controller.deleteTask(task.id),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StackedCardCounter extends StatelessWidget {
+  final int count;
+  final AppPalette palette;
+
+  const _StackedCardCounter({
+    required this.count,
+    required this.palette,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 62,
+      height: 62,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Background card tilted at -6 degrees
+          Transform.rotate(
+            angle: -6 * math.pi / 180,
+            child: Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: palette.border,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          // Foreground card tilted at +6 degrees
+          Transform.rotate(
+            angle: 6 * math.pi / 180,
+            child: Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: palette.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: palette.border, width: 1),
+              ),
+            ),
+          ),
+          // Overlapping pill badge on bottom-left
+          Positioned(
+            left: 0,
+            bottom: 2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: palette.surface,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: palette.border, width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 12,
+                    color: palette.accent,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    '$count',
+                    style: TextStyle(
+                      color: palette.primaryText,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1032,7 +1971,7 @@ class _BottomControls extends StatelessWidget {
 }
 
 // ----------------------------------------------------------------------------
-// Bento Analytics & History Bottom Sheet
+// Analytics Bottom Sheet & MetricCard
 // ----------------------------------------------------------------------------
 
 class _AnalyticsSheet extends StatelessWidget {
@@ -1106,11 +2045,11 @@ class _AnalyticsSheet extends StatelessWidget {
                   controller: scrollController,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   children: [
-                    // Bento Row: Ignition, Flow, Ratio
+                    // MetricCard Row: Ignition, Flow, Ratio
                     Row(
                       children: [
                         Expanded(
-                          child: _BentoCard(
+                          child: MetricCard(
                             palette: palette,
                             label: 'Ignition',
                             value: '${tFlowMinutes}m',
@@ -1119,7 +2058,7 @@ class _AnalyticsSheet extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: _BentoCard(
+                          child: MetricCard(
                             palette: palette,
                             label: 'Flow',
                             value: flowTotalStr,
@@ -1128,7 +2067,7 @@ class _AnalyticsSheet extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: _BentoCard(
+                          child: MetricCard(
                             palette: palette,
                             label: 'Ratio',
                             value: ratioStr,
@@ -1266,13 +2205,14 @@ class _AnalyticsSheet extends StatelessWidget {
   }
 }
 
-class _BentoCard extends StatelessWidget {
+class MetricCard extends StatelessWidget {
   final AppPalette palette;
   final String label;
   final String value;
   final String subtext;
 
-  const _BentoCard({
+  const MetricCard({
+    super.key,
     required this.palette,
     required this.label,
     required this.value,
@@ -1528,7 +2468,7 @@ class _DayData {
 }
 
 // ----------------------------------------------------------------------------
-// Settings Bottom Sheet
+// Settings Bottom Sheet & File-Based Backup
 // ----------------------------------------------------------------------------
 
 class _SettingsSheet extends StatefulWidget {
@@ -1556,6 +2496,165 @@ class _SettingsSheetState extends State<_SettingsSheet> {
   void _save(AppSettings updated) {
     setState(() => _localSettings = updated);
     widget.controller.updateSettings(updated);
+  }
+
+  Future<void> _exportBackupFile(BuildContext context) async {
+    try {
+      final now = DateTime.now();
+      final yyyy = now.year.toString();
+      final mm = now.month.toString().padLeft(2, '0');
+      final dd = now.day.toString().padLeft(2, '0');
+      final fileName = 'focus_backup_${yyyy}${mm}${dd}.json';
+
+      final jsonStr = widget.controller.exportFullJson();
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsString(jsonStr, flush: true);
+
+      await Share.shareXFiles([XFile(file.path)], text: 'Magn Focus Backup');
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Backup ready: $fileName')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Export failed: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _importBackupFile(BuildContext context) async {
+    final palette = widget.palette;
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      String content;
+      final fileObj = result.files.single;
+      if (fileObj.path != null) {
+        content = await File(fileObj.path!).readAsString();
+      } else if (fileObj.bytes != null) {
+        content = utf8.decode(fileObj.bytes!);
+      } else {
+        throw const FormatException('Unable to read selected file');
+      }
+
+      // Defensive validation
+      final data = widget.controller.validateBackupJson(content);
+
+      if (!context.mounted) return;
+
+      showDialog<void>(
+        context: context,
+        builder: (dialogCtx) => AlertDialog(
+          backgroundColor: palette.surface,
+          title: Text('Restore Backup',
+              style: TextStyle(color: palette.primaryText, fontSize: 16)),
+          content: Text(
+            'Found ${data['sessionCount']} sessions and ${data['taskCount']} tasks.\n\nChoose how to restore:',
+            style: TextStyle(color: palette.secondaryText, fontSize: 13),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel',
+                  style: TextStyle(color: palette.secondaryText)),
+              onPressed: () => Navigator.pop(dialogCtx),
+            ),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: palette.accent),
+                foregroundColor: palette.accent,
+              ),
+              child: const Text('Merge'),
+              onPressed: () {
+                widget.controller.restoreBackup(
+                    data['raw'] as Map<String, dynamic>,
+                    merge: true);
+                Navigator.pop(dialogCtx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Backup merged successfully')),
+                );
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: palette.accent,
+                foregroundColor: palette.background,
+              ),
+              child: const Text('Overwrite All'),
+              onPressed: () {
+                widget.controller.restoreBackup(
+                    data['raw'] as Map<String, dynamic>,
+                    merge: false);
+                Navigator.pop(dialogCtx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Backup restored (all replaced)')),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid backup file: $e')),
+        );
+      }
+    }
+  }
+
+  void _confirmReset(BuildContext context) {
+    final palette = widget.palette;
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: palette.surface,
+        title: Text('Reset All Data?',
+            style: TextStyle(color: palette.primaryText, fontSize: 16)),
+        content: Text(
+          'This will permanently delete all recorded focus sessions, tasks, and revert settings.',
+          style: TextStyle(color: palette.secondaryText, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            child:
+                Text('Cancel', style: TextStyle(color: palette.secondaryText)),
+            onPressed: () => Navigator.pop(dialogCtx),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Reset Everything'),
+            onPressed: () async {
+              await widget.controller.resetAllData();
+              if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+              setState(() {
+                _localSettings = widget.controller.settings;
+              });
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('All data has been reset')),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -1641,7 +2740,7 @@ class _SettingsSheetState extends State<_SettingsSheet> {
                                   color: palette.primaryText, fontSize: 14),
                             ),
                             subtitle: Text(
-                              'When off, display minimal breathing circle',
+                              'When off, display tactile rotating dial',
                               style: TextStyle(
                                   color: palette.secondaryText, fontSize: 12),
                             ),
@@ -1750,27 +2849,25 @@ class _SettingsSheetState extends State<_SettingsSheet> {
                           ListTile(
                             leading: Icon(Icons.file_upload_outlined,
                                 color: palette.primaryText, size: 20),
-                            title: Text('Export JSON',
+                            title: Text('Export Backup File',
                                 style: TextStyle(
                                     color: palette.primaryText, fontSize: 14)),
-                            onTap: () {
-                              final jsonStr = widget.controller.exportJson();
-                              Clipboard.setData(ClipboardData(text: jsonStr));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                        Text('Backup copied to clipboard')),
-                              );
-                            },
+                            subtitle: Text('Save .json file with sessions and tasks',
+                                style: TextStyle(
+                                    color: palette.secondaryText, fontSize: 12)),
+                            onTap: () => _exportBackupFile(context),
                           ),
                           Divider(color: palette.border, height: 1),
                           ListTile(
                             leading: Icon(Icons.file_download_outlined,
                                 color: palette.primaryText, size: 20),
-                            title: Text('Import JSON',
+                            title: Text('Import Backup File',
                                 style: TextStyle(
                                     color: palette.primaryText, fontSize: 14)),
-                            onTap: () => _showImportDialog(context),
+                            subtitle: Text('Load .json file with merge or overwrite',
+                                style: TextStyle(
+                                    color: palette.secondaryText, fontSize: 12)),
+                            onTap: () => _importBackupFile(context),
                           ),
                           Divider(color: palette.border, height: 1),
                           ListTile(
@@ -1826,100 +2923,6 @@ class _SettingsSheetState extends State<_SettingsSheet> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  void _showImportDialog(BuildContext context) {
-    final textController = TextEditingController();
-    final palette = widget.palette;
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        backgroundColor: palette.surface,
-        title: Text('Import JSON',
-            style: TextStyle(color: palette.primaryText, fontSize: 16)),
-        content: TextField(
-          controller: textController,
-          maxLines: 5,
-          style: TextStyle(color: palette.primaryText, fontSize: 12),
-          decoration: InputDecoration(
-            hintText: 'Paste valid JSON export here',
-            hintStyle: TextStyle(color: palette.secondaryText),
-            border: OutlineInputBorder(
-              borderSide: BorderSide(color: palette.border),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            child:
-                Text('Cancel', style: TextStyle(color: palette.secondaryText)),
-            onPressed: () => Navigator.pop(dialogCtx),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: palette.accent,
-              foregroundColor: palette.background,
-            ),
-            child: const Text('Import'),
-            onPressed: () {
-              final ok = widget.controller.importJson(textController.text);
-              if (dialogCtx.mounted) Navigator.pop(dialogCtx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(ok
-                      ? 'Data imported successfully'
-                      : 'Failed to parse JSON backup'),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmReset(BuildContext context) {
-    final palette = widget.palette;
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        backgroundColor: palette.surface,
-        title: Text('Reset All Data?',
-            style: TextStyle(color: palette.primaryText, fontSize: 16)),
-        content: Text(
-          'This will permanently delete all recorded focus sessions and revert settings.',
-          style: TextStyle(color: palette.secondaryText, fontSize: 13),
-        ),
-        actions: [
-          TextButton(
-            child:
-                Text('Cancel', style: TextStyle(color: palette.secondaryText)),
-            onPressed: () => Navigator.pop(dialogCtx),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Reset Everything'),
-            onPressed: () async {
-              await widget.controller.resetAllData();
-              if (dialogCtx.mounted) Navigator.pop(dialogCtx);
-              setState(() {
-                _localSettings = widget.controller.settings;
-              });
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('All data has been reset')),
-                );
-              }
-            },
-          ),
-        ],
       ),
     );
   }
