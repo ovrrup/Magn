@@ -917,7 +917,9 @@ class _StopwatchScreenState extends State<StopwatchScreen>
                       });
                     }
                     await _saveData();
-                    Navigator.pop(dialogCtx);
+                    if (dialogCtx.mounted) {
+                      Navigator.pop(dialogCtx);
+                    }
                     messenger.showSnackBar(
                       SnackBar(
                         content: Text(
@@ -982,7 +984,9 @@ class _StopwatchScreenState extends State<StopwatchScreen>
                 _currentSessionInterruptions = 0;
               });
               await _saveData();
-              Navigator.pop(dialogCtx);
+              if (dialogCtx.mounted) {
+                Navigator.pop(dialogCtx);
+              }
               messenger.showSnackBar(
                 const SnackBar(
                   content: Text('All session data wiped & calibration reset.'),
