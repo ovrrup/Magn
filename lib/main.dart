@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:ui' show FragmentProgram, FragmentShader;
+import 'dart:ui' show FragmentProgram;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -48,7 +48,6 @@ class _StopwatchScreenState extends State<StopwatchScreen>
 
   late final AnimationController _animationController;
   FragmentProgram? _fragmentProgram;
-  FragmentShader? _shader;
 
   int _elapsedSeconds = 0;
   bool _isRunning = false;
@@ -72,7 +71,6 @@ class _StopwatchScreenState extends State<StopwatchScreen>
       if (mounted) {
         setState(() {
           _fragmentProgram = program;
-          _shader = program.fragmentShader();
         });
       }
     } catch (_) {
@@ -262,7 +260,7 @@ class _StopwatchScreenState extends State<StopwatchScreen>
                 builder: (context, _) {
                   return CustomPaint(
                     painter: FrostedTilesPainter(
-                      shader: _shader,
+                      program: _fragmentProgram,
                       time: _animationController.value * 20.0,
                     ),
                   );
@@ -345,20 +343,21 @@ class _StopwatchScreenState extends State<StopwatchScreen>
 
 /// CustomPainter that renders the procedural frosted tiles shader or fallback gradient.
 class FrostedTilesPainter extends CustomPainter {
-  final FragmentShader? shader;
+  final FragmentProgram? program;
   final double time;
 
   FrostedTilesPainter({
-    required this.shader,
+    required this.program,
     required this.time,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (shader != null) {
-      shader!.setFloat(0, size.width);
-      shader!.setFloat(1, size.height);
-      shader!.setFloat(2, time);
+    if (program != null) {
+      final shader = program!.fragmentShader();
+      shader.setFloat(0, size.width);
+      shader.setFloat(1, size.height);
+      shader.setFloat(2, time);
 
       final paint = Paint()..shader = shader;
       canvas.drawRect(Offset.zero & size, paint);
@@ -381,6 +380,6 @@ class FrostedTilesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant FrostedTilesPainter oldDelegate) {
-    return oldDelegate.time != time || oldDelegate.shader != shader;
+    return oldDelegate.time != time || oldDelegate.program != program;
   }
 }
