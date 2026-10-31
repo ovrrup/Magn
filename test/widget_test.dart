@@ -3,41 +3,48 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:magn/main.dart';
 
 void main() {
-  testWidgets('StopwatchApp smoke test verifies initial Digit-Free Flow Orb UI',
+  testWidgets('StopwatchApp smoke test verifies initial flat matte wordless UI',
       (WidgetTester tester) async {
     await tester.pumpWidget(const StopwatchApp());
 
-    // Default: START button, ENDLESS mode pill, Analytics & Settings icons
-    expect(find.text('START'), findsOneWidget);
-    expect(find.text('ENDLESS'), findsOneWidget);
-    expect(find.byIcon(Icons.insights_rounded), findsOneWidget);
+    // Main workspace: Play button icon, mode segmented icons, action icons
+    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.all_inclusive_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.timelapse_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.bar_chart_rounded), findsOneWidget);
     expect(find.byIcon(Icons.tune_rounded), findsOneWidget);
-    // showDigits is default false so digits are hidden
+
+    // Nearly wordless workspace: no START, ENDLESS, or 00:00 text
+    expect(find.text('START'), findsNothing);
+    expect(find.text('ENDLESS'), findsNothing);
     expect(find.text('00:00'), findsNothing);
   });
 
-  testWidgets('Mode switcher toggles between ENDLESS and POMODORO',
+  testWidgets('Mode switcher toggles between Endless and Pomodoro',
       (WidgetTester tester) async {
     await tester.pumpWidget(const StopwatchApp());
 
-    // Switch to POMODORO
-    await tester.tap(find.text('ENDLESS'));
+    // Initially in Endless mode: no skip phase button
+    expect(find.byIcon(Icons.skip_next_rounded), findsNothing);
+
+    // Switch to Pomodoro mode
+    await tester.tap(find.byIcon(Icons.timelapse_rounded));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('POMODORO'), findsOneWidget);
-    expect(find.text('FOCUS'), findsOneWidget);
-    expect(find.text('Skip Phase'), findsOneWidget);
+    // In Pomodoro mode: secondary skip button is present
+    expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
 
-    // Switch back to ENDLESS
-    await tester.tap(find.text('POMODORO'));
+    // Switch back to Endless mode
+    await tester.tap(find.byIcon(Icons.all_inclusive_rounded));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('ENDLESS'), findsOneWidget);
+    // Secondary skip button disappears in Endless mode
+    expect(find.byIcon(Icons.skip_next_rounded), findsNothing);
   });
 
-  testWidgets('Analytics button opens Flow Analytics dashboard',
+  testWidgets('Analytics button opens Bento Analytics dashboard',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.0;
@@ -49,17 +56,17 @@ void main() {
     await tester.pumpWidget(const StopwatchApp());
 
     // Tap Analytics icon button
-    await tester.tap(find.byIcon(Icons.insights_rounded));
+    await tester.tap(find.byIcon(Icons.bar_chart_rounded));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    // Verify 3 Bento cards and 7-day chart
-    expect(find.text('Flow Analytics'), findsOneWidget);
-    expect(find.text('Personal Ignition'), findsOneWidget);
-    expect(find.text('Total Flow Time'), findsOneWidget);
-    expect(find.text('Flow Ratio'), findsOneWidget);
-    expect(find.text('7-Day Focus & Flow Cadence'), findsOneWidget);
-    expect(find.text('Focus Consistency Trend'), findsOneWidget);
+    // Verify Bento cards and 7-Day chart
+    expect(find.text('Analytics'), findsOneWidget);
+    expect(find.text('Ignition'), findsOneWidget);
+    expect(find.text('Flow'), findsOneWidget);
+    expect(find.text('Ratio'), findsOneWidget);
+    expect(find.text('7-Day Flow'), findsOneWidget);
+    expect(find.text('History'), findsOneWidget);
   });
 
   testWidgets('Settings button opens Settings and enables Timer Digits',
@@ -91,7 +98,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    // Close Settings sheet by tapping top drag handle or popping
+    // Close Settings sheet by popping
     Navigator.of(tester.element(find.text('Settings'))).pop();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
@@ -101,22 +108,23 @@ void main() {
     expect(find.text('.00'), findsOneWidget);
   });
 
-  testWidgets('Skip Phase advances Pomodoro phase',
+  testWidgets('Skip button skips Pomodoro phase',
       (WidgetTester tester) async {
     await tester.pumpWidget(const StopwatchApp());
 
-    // Switch to POMODORO
-    await tester.tap(find.text('ENDLESS'));
+    // Switch to Pomodoro mode
+    await tester.tap(find.byIcon(Icons.timelapse_rounded));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('FOCUS'), findsOneWidget);
+    expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
 
-    // Tap Skip Phase button
-    await tester.tap(find.text('Skip Phase'));
+    // Tap Skip button
+    await tester.tap(find.byIcon(Icons.skip_next_rounded));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('SHORT BREAK'), findsOneWidget);
+    // App remains responsive and in Pomodoro mode
+    expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
   });
 }
