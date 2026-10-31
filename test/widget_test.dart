@@ -63,7 +63,7 @@ void main() {
     // Verify Bento cards and 7-Day chart
     expect(find.text('Analytics'), findsOneWidget);
     expect(find.text('Ignition'), findsOneWidget);
-    expect(find.text('Flow'), findsOneWidget);
+    expect(find.text('Flow'), findsNWidgets(2)); // Bento card & chart legend
     expect(find.text('Ratio'), findsOneWidget);
     expect(find.text('7-Day Flow'), findsOneWidget);
     expect(find.text('History'), findsOneWidget);
