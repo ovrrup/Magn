@@ -7,6 +7,11 @@ void main() {
   runApp(const StopwatchApp());
 }
 
+// Exact brand chromatics
+const Color _deepRed = Color(0xFFAA0003);
+const Color _coralPink = Color(0xFFFF6B6B);
+const Color _warmCream = Color(0xFFFFEDD5);
+
 /// Active timing mode of the application.
 enum AppMode { endless, pomodoro }
 
@@ -55,11 +60,6 @@ class StopwatchScreen extends StatefulWidget {
 
 class _StopwatchScreenState extends State<StopwatchScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  // Exact brand chromatics
-  static const Color _deepRed = Color(0xFFAA0003);
-  static const Color _coralPink = Color(0xFFFF6B6B);
-  static const Color _warmCream = Color(0xFFFFEDD5);
-
   // Background Fragment Shader
   late final AnimationController _animationController;
   FragmentProgram? _fragmentProgram;
@@ -818,10 +818,6 @@ class _AnalyticsBottomSheet extends StatefulWidget {
 }
 
 class _AnalyticsBottomSheetState extends State<_AnalyticsBottomSheet> {
-  static const Color _deepRed = Color(0xFFAA0003);
-  static const Color _coralPink = Color(0xFFFF6B6B);
-  static const Color _warmCream = Color(0xFFFFEDD5);
-
   int _selectedTab = 0; // 0: Flow Analytics, 1: Session Log
 
   String _formatMinutesSeconds(int totalSec) {
@@ -1277,9 +1273,9 @@ class FrostedTilesPainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFFAA0003),
-            Color(0xFFFF6B6B),
-            Color(0xFFFFEDD5),
+            _deepRed,
+            _coralPink,
+            _warmCream,
           ],
           stops: [0.0, 0.5, 1.0],
         ).createShader(Offset.zero & size);
