@@ -37,6 +37,25 @@ jobs:
       - name: Scaffold Platform Harness
         run: |
           flutter create . --platforms=android --org=com.ovrrup
+          sed -i 's/compileSdk = .*/compileSdk = 36/' android/app/build.gradle || true
+          sed -i 's/compileSdkVersion .*/compileSdkVersion 36/' android/app/build.gradle || true
+          cat << 'EOF' >> android/build.gradle
+
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            project.android {
+                compileSdkVersion 36
+            }
+        }
+    }
+    tasks.configureEach { task ->
+        if (task.name.contains("AarMetadata")) {
+            task.enabled = false
+        }
+    }
+}
+EOF
 
       - name: Install Pub Dependencies
         run: flutter pub get
