@@ -39,23 +39,10 @@ jobs:
           flutter create . --platforms=android --org=com.ovrrup
           sed -i 's/compileSdk = .*/compileSdk = 36/' android/app/build.gradle || true
           sed -i 's/compileSdkVersion .*/compileSdkVersion 36/' android/app/build.gradle || true
-          cat << 'EOF' >> android/build.gradle
-
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty("android")) {
-            project.android {
-                compileSdkVersion 36
-            }
-        }
-    }
-    tasks.configureEach { task ->
-        if (task.name.contains("AarMetadata")) {
-            task.enabled = false
-        }
-    }
-}
-EOF
+          python3 -c "
+          with open('android/build.gradle', 'a') as f:
+              f.write('\nsubprojects {\n    afterEvaluate { project ->\n        if (project.hasProperty(\"android\")) {\n            project.android {\n                compileSdkVersion 36\n            }\n        }\n    }\n    tasks.configureEach { task ->\n        if (task.name.contains(\"AarMetadata\")) {\n            task.enabled = false\n        }\n    }\n}\n')
+          "
 
       - name: Install Pub Dependencies
         run: flutter pub get
