@@ -21,7 +21,7 @@ void main() {
 
     // Switch to POMODORO
     await tester.tap(find.text('ENDLESS'));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('POMODORO'), findsOneWidget);
     expect(find.text('FOCUS'), findsOneWidget);
@@ -30,7 +30,7 @@ void main() {
 
     // Switch back to ENDLESS
     await tester.tap(find.text('POMODORO'));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('ENDLESS'), findsOneWidget);
     expect(find.text('00:00'), findsOneWidget);
@@ -43,7 +43,7 @@ void main() {
 
     // Tap history button
     await tester.tap(find.byIcon(Icons.history_rounded));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
     // Verify bottom sheet tabs
     expect(find.text('Flow Analytics'), findsOneWidget);
@@ -53,7 +53,7 @@ void main() {
 
     // Switch to Session Log
     await tester.tap(find.text('Session Log'));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('No sessions recorded'), findsOneWidget);
   });
 }
