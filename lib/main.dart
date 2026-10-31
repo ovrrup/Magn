@@ -1704,14 +1704,17 @@ class _AnalyticsDashboardSheetState extends State<_AnalyticsDashboardSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Flow Analytics',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: primaryText,
+                  Flexible(
+                    child: Text(
+                      'Flow Analytics',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: primaryText,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -1902,14 +1905,17 @@ class _AnalyticsDashboardSheetState extends State<_AnalyticsDashboardSheet> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Session History (${widget.sessions.length})',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: primaryText,
+                      Flexible(
+                        child: Text(
+                          'Session History (${widget.sessions.length})',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: primaryText,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         'Swipe to delete',
                         style: TextStyle(
@@ -2392,12 +2398,16 @@ class _SettingsSheet extends StatelessWidget {
                 children: [
                   // --- 1. Behavior Section ---
                   _buildSectionHeader('Behavior', primaryText),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: cardBg,
-                      borderRadius: BorderRadius.circular(16),
-                      border: cardBorder,
-                    ),
+                  Material(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(16),
+                    clipBehavior: Clip.antiAlias,
+                    shape: cardBorder != null
+                        ? RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: const BorderSide(color: _coralPink, width: 1),
+                          )
+                        : null,
                     child: Column(
                       children: [
                         SwitchListTile(
@@ -2449,167 +2459,179 @@ class _SettingsSheet extends StatelessWidget {
 
                   // --- 2. Appearance Section ---
                   _buildSectionHeader('Appearance', primaryText),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: cardBg,
-                      borderRadius: BorderRadius.circular(16),
-                      border: cardBorder,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Theme Mode',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: primaryText,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            _buildThemePill(
-                              label: 'System',
-                              isSelected: themeOption == ThemeModeOption.system,
-                              onTap: () =>
-                                  onThemeChanged(ThemeModeOption.system),
-                              isPureBlack: isPureBlack,
-                            ),
-                            const SizedBox(width: 8),
-                            _buildThemePill(
-                              label: 'Light',
-                              isSelected: themeOption == ThemeModeOption.light,
-                              onTap: () =>
-                                  onThemeChanged(ThemeModeOption.light),
-                              isPureBlack: isPureBlack,
-                            ),
-                            const SizedBox(width: 8),
-                            _buildThemePill(
-                              label: 'Dark',
-                              isSelected: themeOption == ThemeModeOption.dark,
-                              onTap: () =>
-                                  onThemeChanged(ThemeModeOption.dark),
-                              isPureBlack: isPureBlack,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Divider(
-                          height: 1,
-                          color: primaryText.withValues(alpha: 0.1),
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          activeThumbColor: _coralPink,
-                          title: Text(
-                            'Pure Black OLED Mode',
+                  Material(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(16),
+                    clipBehavior: Clip.antiAlias,
+                    shape: cardBorder != null
+                        ? RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: const BorderSide(color: _coralPink, width: 1),
+                          )
+                        : null,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Theme Mode',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               color: primaryText,
                             ),
                           ),
-                          subtitle: Text(
-                            'True #000000 background with crisp Coral borders',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: primaryText.withValues(alpha: 0.7),
-                            ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              _buildThemePill(
+                                label: 'System',
+                                isSelected: themeOption == ThemeModeOption.system,
+                                onTap: () =>
+                                    onThemeChanged(ThemeModeOption.system),
+                                isPureBlack: isPureBlack,
+                              ),
+                              const SizedBox(width: 8),
+                              _buildThemePill(
+                                label: 'Light',
+                                isSelected: themeOption == ThemeModeOption.light,
+                                onTap: () =>
+                                    onThemeChanged(ThemeModeOption.light),
+                                isPureBlack: isPureBlack,
+                              ),
+                              const SizedBox(width: 8),
+                              _buildThemePill(
+                                label: 'Dark',
+                                isSelected: themeOption == ThemeModeOption.dark,
+                                onTap: () =>
+                                    onThemeChanged(ThemeModeOption.dark),
+                                isPureBlack: isPureBlack,
+                              ),
+                            ],
                           ),
-                          value: pureBlackOled,
-                          onChanged: onPureBlackChanged,
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+                          Divider(
+                            height: 1,
+                            color: primaryText.withValues(alpha: 0.1),
+                          ),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            activeThumbColor: _coralPink,
+                            title: Text(
+                              'Pure Black OLED Mode',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: primaryText,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'True #000000 background with crisp Coral borders',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: primaryText.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            value: pureBlackOled,
+                            onChanged: onPureBlackChanged,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
 
                   // --- 3. Data Management Section ---
                   _buildSectionHeader('Data Management', primaryText),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: cardBg,
-                      borderRadius: BorderRadius.circular(16),
-                      border: cardBorder,
-                    ),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(
-                            Icons.upload_file_rounded,
-                            color: _coralPink,
-                          ),
-                          title: Text(
-                            'Export Data',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: primaryText,
+                  Material(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(16),
+                    clipBehavior: Clip.antiAlias,
+                    shape: cardBorder != null
+                        ? RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: const BorderSide(color: _coralPink, width: 1),
+                          )
+                        : null,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(
+                              Icons.upload_file_rounded,
+                              color: _coralPink,
                             ),
-                          ),
-                          subtitle: Text(
-                            'Copy formatted JSON or save backup file',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: primaryText.withValues(alpha: 0.7),
+                            title: Text(
+                              'Export Data',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: primaryText,
+                              ),
                             ),
-                          ),
-                          onTap: onExportData,
-                        ),
-                        Divider(
-                          height: 1,
-                          color: primaryText.withValues(alpha: 0.1),
-                        ),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(
-                            Icons.download_rounded,
-                            color: _coralPink,
-                          ),
-                          title: Text(
-                            'Import Data',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: primaryText,
+                            subtitle: Text(
+                              'Copy formatted JSON or save backup file',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: primaryText.withValues(alpha: 0.7),
+                              ),
                             ),
+                            onTap: onExportData,
                           ),
-                          subtitle: Text(
-                            'Paste JSON or load backup from file',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: primaryText.withValues(alpha: 0.7),
+                          Divider(
+                            height: 1,
+                            color: primaryText.withValues(alpha: 0.1),
+                          ),
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(
+                              Icons.download_rounded,
+                              color: _coralPink,
                             ),
+                            title: Text(
+                              'Import Data',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: primaryText,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Paste JSON or load backup from file',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: primaryText.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            onTap: onImportData,
                           ),
-                          onTap: onImportData,
-                        ),
-                        Divider(
-                          height: 1,
-                          color: primaryText.withValues(alpha: 0.1),
-                        ),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(
-                            Icons.delete_forever_rounded,
-                            color: Colors.red,
+                          Divider(
+                            height: 1,
+                            color: primaryText.withValues(alpha: 0.1),
                           ),
-                          title: const Text(
-                            'Delete All Data',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(
+                              Icons.delete_forever_rounded,
                               color: Colors.red,
                             ),
-                          ),
-                          subtitle: Text(
-                            'Wipe all sessions and reset flow calibration',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: primaryText.withValues(alpha: 0.7),
+                            title: const Text(
+                              'Delete All Data',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.red,
+                              ),
                             ),
+                            subtitle: Text(
+                              'Wipe all sessions and reset flow calibration',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: primaryText.withValues(alpha: 0.7),
+                              ),
+                            ),
+                            onTap: onDeleteAllData,
                           ),
-                          onTap: onDeleteAllData,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),
