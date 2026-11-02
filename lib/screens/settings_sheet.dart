@@ -74,13 +74,17 @@ class SettingsSheet extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Sanctuary Calibration & Settings',
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: palette.primaryText,
+                    Expanded(
+                      child: Text(
+                        'Sanctuary Calibration & Settings',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'sans-serif',
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: palette.primaryText,
+                        ),
                       ),
                     ),
                     IconButton(

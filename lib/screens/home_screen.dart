@@ -256,16 +256,21 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'NEXT PLANNED TOPIC',
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: palette.secondaryText,
-                      letterSpacing: 0.8,
+                  Expanded(
+                    child: Text(
+                      'NEXT PLANNED TOPIC',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'sans-serif',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: palette.secondaryText,
+                        letterSpacing: 0.8,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 4),
                   Icon(Icons.flag_rounded, color: palette.amberGold, size: 16),
                 ],
               ),
@@ -311,16 +316,21 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'BEST COMPLETED SESSION',
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: palette.secondaryText,
-                      letterSpacing: 0.8,
+                  Expanded(
+                    child: Text(
+                      'BEST COMPLETED SESSION',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'sans-serif',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: palette.secondaryText,
+                        letterSpacing: 0.8,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 4),
                   Icon(Icons.workspace_premium_rounded, color: palette.amberGold, size: 16),
                 ],
               ),
@@ -371,16 +381,21 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'TOP FOCUS TOPIC',
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: palette.secondaryText,
-                      letterSpacing: 0.8,
+                  Expanded(
+                    child: Text(
+                      'TOP FOCUS TOPIC',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'sans-serif',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: palette.secondaryText,
+                        letterSpacing: 0.8,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 4),
                   Icon(Icons.track_changes_rounded, color: palette.mintAura, size: 16),
                 ],
               ),
@@ -427,16 +442,21 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'FLOW READINESS (ESTIMATE)',
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: palette.secondaryText,
-                      letterSpacing: 0.8,
+                  Expanded(
+                    child: Text(
+                      'FLOW READINESS (ESTIMATE)',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'sans-serif',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: palette.secondaryText,
+                        letterSpacing: 0.8,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 4),
                   Icon(Icons.bolt_rounded, color: palette.amberGold, size: 16),
                 ],
               ),
@@ -453,13 +473,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    '• ${profile.readinessLabel}',
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: palette.primaryText,
+                  Expanded(
+                    child: Text(
+                      '• ${profile.readinessLabel}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'sans-serif',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: palette.primaryText,
+                      ),
                     ),
                   ),
                 ],

@@ -255,15 +255,20 @@ class StatsScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Focus Consistency Matrix',
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: palette.primaryText,
+              Expanded(
+                child: Text(
+                  'Focus Consistency Matrix',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'sans-serif',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: palette.primaryText,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 'Last 12 Weeks',
                 style: TextStyle(

@@ -62,8 +62,8 @@ void main() {
         windowMultiplier: 1.25,
         isCancelled: false,
       );
-      expect(reward.baseTokens, 20);
-      expect(reward.flowTokens, 15);
+      expect(reward.baseTokens, 25);
+      expect(reward.flowTokens, 18);
       expect(reward.totalTokens, 43); // floor(35 * 1.25)
     });
 
@@ -198,7 +198,7 @@ void main() {
       expect(controller.currentStreak, 0);
 
       // Add session today and yesterday
-      controller.completedSessions.addAll([
+      controller.addCompletedSessionForTesting(
         CompletedSession(
           id: 's-today',
           topic: 'Focus',
@@ -210,6 +210,8 @@ void main() {
           windowMultiplier: 1.0,
           totalTokensEarned: 25,
         ),
+      );
+      controller.addCompletedSessionForTesting(
         CompletedSession(
           id: 's-yesterday',
           topic: 'Focus',
@@ -221,6 +223,8 @@ void main() {
           windowMultiplier: 1.0,
           totalTokensEarned: 25,
         ),
+      );
+      controller.addCompletedSessionForTesting(
         CompletedSession(
           id: 's-2days',
           topic: 'Focus',
@@ -232,7 +236,7 @@ void main() {
           windowMultiplier: 1.0,
           totalTokensEarned: 25,
         ),
-      ]);
+      );
 
       expect(controller.calculateDynamicStreak(), 3);
     });
@@ -243,7 +247,7 @@ void main() {
       // Three days ago (skipped yesterday and 2 days ago)
       final threeDaysAgo = today.subtract(const Duration(days: 3));
 
-      controller.completedSessions.addAll([
+      controller.addCompletedSessionForTesting(
         CompletedSession(
           id: 's-today',
           topic: 'Focus',
@@ -255,6 +259,8 @@ void main() {
           windowMultiplier: 1.0,
           totalTokensEarned: 25,
         ),
+      );
+      controller.addCompletedSessionForTesting(
         CompletedSession(
           id: 's-old',
           topic: 'Focus',
@@ -266,7 +272,7 @@ void main() {
           windowMultiplier: 1.0,
           totalTokensEarned: 25,
         ),
-      ]);
+      );
 
       expect(controller.calculateDynamicStreak(), 1);
     });

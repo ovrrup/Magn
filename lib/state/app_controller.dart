@@ -164,6 +164,12 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
   /// Explicit method alias for [currentStreak].
   int calculateDynamicStreak() => currentStreak;
 
+  /// Test helper to insert completed sessions for calculation tests.
+  void addCompletedSessionForTesting(CompletedSession session) {
+    _completedSessions.add(session);
+    notifyListeners();
+  }
+
   // --- Initializer & Local Storage ---
 
   Future<void> _initializeData() async {
@@ -414,6 +420,7 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
 
   String exportBackupJson() {
     final exportMap = {
+      'schemaVersion': backupSchemaVersion,
       'schema': backupSchemaVersion,
       'exportedAt': DateTime.now().toIso8601String(),
       'walletTokenBalance': _walletTokenBalance,
@@ -449,7 +456,7 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
   Future<bool> importBackupJson(String rawJson, {required bool overwrite}) async {
     try {
       final map = jsonDecode(rawJson) as Map<String, dynamic>;
-      final schema = map['schema'] as String?;
+      final schema = (map['schemaVersion'] ?? map['schema']) as String?;
       if (schema != backupSchemaVersion && schema != 'serene_sky_backup_v1') {
         throw const FormatException('Invalid or unsupported backup schema version.');
       }
