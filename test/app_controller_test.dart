@@ -312,7 +312,7 @@ void main() {
           {
             'id': 'p1',
             'topic': 'Cloud Architecture',
-            'plannedMinutes': 45,
+            'plannedDurationMinutes': 45,
             'preferredWindow': {
               'startHour': 9,
               'startMinute': 0,
@@ -326,8 +326,8 @@ void main() {
         'completedSessions': [],
         'goals': [],
         'settings': {
-          'precisionEnabled': true,
-          'themePalette': 'midnightSky',
+          'precisionShowCentiseconds': true,
+          'themeMode': 'midnightSky',
         },
       });
 

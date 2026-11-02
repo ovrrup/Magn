@@ -55,8 +55,8 @@ void main() {
     expect(find.byIcon(Icons.auto_awesome_rounded), findsOneWidget);
 
     // 3. Peek-Edge Hero Carousel (132px height, 4 cards cycling)
-    expect(find.text('Next Planned Topic'), findsWidgets);
-    expect(find.text('Best Session'), findsWidgets);
+    expect(find.text('NEXT PLANNED TOPIC'), findsWidgets);
+    expect(find.text('BEST COMPLETED SESSION'), findsWidgets);
 
     // 4. Stepping-Stone Path: Calm empty state when no sessions are planned
     expect(find.text('No Upcoming Sessions Planned'), findsOneWidget);
@@ -100,9 +100,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Consistency & Telemetry'), findsOneWidget);
-    expect(find.text('Active Streak'), findsOneWidget);
-    expect(find.text('Total Tokens'), findsOneWidget);
-    expect(find.text('Total Focus'), findsOneWidget);
+    expect(find.text('ACTIVE STREAK'), findsOneWidget);
+    expect(find.text('TOTAL TOKENS'), findsOneWidget);
+    expect(find.text('TOTAL FOCUS'), findsOneWidget);
     expect(find.text('Cadence Heatmap'), findsOneWidget);
     expect(find.text('Session History'), findsOneWidget);
 
@@ -110,7 +110,7 @@ void main() {
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Next Planned Topic'), findsWidgets);
+    expect(find.text('NEXT PLANNED TOPIC'), findsWidgets);
   });
 
   testWidgets('Home screen displays 2.5D Stepping-Stone Pedestals when sessions are planned',
@@ -157,7 +157,7 @@ void main() {
 
     // Pedestals render
     expect(find.byType(PedestalNode), findsWidgets);
-    expect(find.text('Second Deep Block'), findsOneWidget);
+    expect(find.text('Second Deep Block'), findsWidgets);
     expect(find.text('First Deep Block'), findsOneWidget);
 
     // Newly planned session appears ABOVE existing one: Second is next/top
@@ -202,16 +202,16 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Settings Sheet contents
-    expect(find.text('Sanctuary Settings'), findsOneWidget);
-    expect(find.text('Centisecond Precision (.00)'), findsOneWidget);
-    expect(find.text('Serene Sky Default'), findsOneWidget);
-    expect(find.text('Midnight Sky Dark'), findsOneWidget);
-    expect(find.text('Pure Black OLED'), findsOneWidget);
-    expect(find.text('Export JSON Backup'), findsOneWidget);
-    expect(find.text('Restore from Backup'), findsOneWidget);
+    expect(find.text('Sanctuary Calibration & Settings'), findsOneWidget);
+    expect(find.textContaining('Timer Precision'), findsOneWidget);
+    expect(find.text('Serene Sky'), findsOneWidget);
+    expect(find.text('Midnight Dark'), findsOneWidget);
+    expect(find.text('Pure Black'), findsOneWidget);
+    expect(find.text('Export Backup'), findsOneWidget);
+    expect(find.text('Restore Backup'), findsOneWidget);
 
     // Toggle theme palette
-    await tester.tap(find.text('Midnight Sky Dark'));
+    await tester.tap(find.text('Midnight Dark'));
     await tester.pumpAndSettle();
     expect(themeController.palette, SkyThemePalette.midnightSky);
   });

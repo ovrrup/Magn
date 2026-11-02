@@ -29,6 +29,9 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
   final Set<String> _completedSessionGuards = {};
 
   bool _isInitialized = false;
+  Completer<void>? _initCompleter;
+
+  Future<void> get initialized => _initCompleter?.future ?? Future.value();
 
   // --- Active Focus Session Engine State ---
   final Stopwatch _focusStopwatch = Stopwatch();
@@ -173,8 +176,11 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
   // --- Initializer & Local Storage ---
 
   Future<void> _initializeData() async {
+    _initCompleter ??= Completer<void>();
     try {
       final prefs = await SharedPreferences.getInstance();
+
+      if (_isInitialized) return;
 
       // Load Settings
       final settingsJson = prefs.getString(_prefKeySettings);
@@ -212,6 +218,9 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
       debugPrint('AppController initialization error: $e');
     } finally {
       _isInitialized = true;
+      if (!(_initCompleter?.isCompleted ?? true)) {
+        _initCompleter?.complete();
+      }
       notifyListeners();
     }
   }
@@ -454,6 +463,8 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<bool> importBackupJson(String rawJson, {required bool overwrite}) async {
+    await initialized;
+    _isInitialized = true;
     try {
       final map = jsonDecode(rawJson) as Map<String, dynamic>;
       final schema = (map['schemaVersion'] ?? map['schema']) as String?;

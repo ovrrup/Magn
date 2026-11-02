@@ -205,7 +205,6 @@ class _HomeScreenState extends State<HomeScreen> {
       height: 132,
       child: PageView.builder(
         controller: _carouselPageController,
-        itemCount: 10000,
         physics: const BouncingScrollPhysics(),
         onPageChanged: (idx) {
           setState(() {
