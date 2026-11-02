@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/app_models.dart';
 import '../state/app_controller.dart';
 import '../theme/sky_theme.dart';
 import '../widgets/sky_glass_widgets.dart';
@@ -244,8 +243,8 @@ class StatsScreen extends StatelessWidget {
 
     final now = DateTime.now();
     const weeksCount = 12;
-    final totalDays = weeksCount * 7;
-    final startDate = DateTime(now.year, now.month, now.day).subtract(Duration(days: totalDays - 1));
+    const totalDays = weeksCount * 7;
+    final startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: totalDays - 1));
 
     return SkyGlassCard(
       padding: const EdgeInsets.all(16),

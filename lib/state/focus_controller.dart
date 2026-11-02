@@ -27,7 +27,6 @@ class FocusController extends ChangeNotifier {
   DateTime? _sessionStartTime;
   DateTime? _phaseStartTime;
   int _accumulatedMilliseconds = 0;
-  int _currentPhaseElapsedMilliseconds = 0;
   Timer? _tickerTimer;
 
   // --- Mode & Cycle ---
