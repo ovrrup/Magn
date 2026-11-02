@@ -371,54 +371,62 @@ class SessionDetailDialog extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'ESTIMATED REWARD',
-                          style: TextStyle(
-                            fontFamily: 'sans-serif',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: palette.secondaryText,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'ESTIMATED REWARD',
+                            style: TextStyle(
+                              fontFamily: 'sans-serif',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: palette.secondaryText,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '+${session.estimatedBaseTokens} Tokens',
-                          style: TextStyle(
-                            fontFamily: 'sans-serif',
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            color: palette.amberGold,
+                          const SizedBox(height: 2),
+                          Text(
+                            '+${session.estimatedBaseTokens} Tokens',
+                            style: TextStyle(
+                              fontFamily: 'sans-serif',
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: palette.amberGold,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    if (windowRelation != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: windowRelation == WindowRelation.inside
-                              ? palette.mintAura.withOpacity(0.25)
-                              : Colors.white.withOpacity(0.15),
-                          border: Border.all(
+                    if (windowRelation != null) ...[
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
                             color: windowRelation == WindowRelation.inside
-                                ? palette.mintAura
-                                : Colors.white.withOpacity(0.35),
+                                ? palette.mintAura.withOpacity(0.25)
+                                : Colors.white.withOpacity(0.15),
+                            border: Border.all(
+                              color: windowRelation == WindowRelation.inside
+                                  ? palette.mintAura
+                                  : Colors.white.withOpacity(0.35),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          windowRelation.label,
-                          style: TextStyle(
-                            fontFamily: 'sans-serif',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: palette.primaryText,
+                          child: Text(
+                            windowRelation.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'sans-serif',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: palette.primaryText,
+                            ),
                           ),
                         ),
                       ),
+                    ],
                   ],
                 ),
               ),
@@ -529,28 +537,30 @@ class SessionDetailDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 4,
-            height: 4,
-            margin: const EdgeInsets.only(top: 6, right: 6),
+            width: 5,
+            height: 5,
+            margin: const EdgeInsets.only(top: 5, right: 8),
             decoration: BoxDecoration(shape: BoxShape.circle, color: accent),
           ),
           Expanded(
-            child: Text(
-              '$left ',
-              style: TextStyle(
-                fontFamily: 'sans-serif',
-                fontSize: 11,
-                color: palette.secondaryText,
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  fontFamily: 'sans-serif',
+                  fontSize: 11,
+                  color: palette.secondaryText,
+                ),
+                children: [
+                  TextSpan(text: '$left '),
+                  TextSpan(
+                    text: right,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: accent,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
-          Text(
-            right,
-            style: TextStyle(
-              fontFamily: 'sans-serif',
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: accent,
             ),
           ),
         ],
