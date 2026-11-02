@@ -333,8 +333,8 @@ void main() {
       expect(controller.settings.precisionEnabled, isTrue);
 
       // Rejects invalid schema or malformed JSON
-      final invalidBackup = '{"schemaVersion": "unsupported_v99"}';
-      final failResult = await controller.importBackupJson(invalidBackup);
+      const invalidBackup = '{"schemaVersion": "unsupported_v99"}';
+      final failResult = await controller.importBackupJson(invalidBackup, overwrite: false);
       expect(failResult, isFalse);
     });
   });

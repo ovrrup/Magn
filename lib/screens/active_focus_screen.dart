@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../state/app_controller.dart';
 import '../theme/sky_theme.dart';
@@ -50,7 +49,7 @@ class ActiveFocusScreen extends StatelessWidget {
 
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
           _confirmAbandonSession(context, controller);
         }

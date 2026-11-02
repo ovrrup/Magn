@@ -161,6 +161,9 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
     return streak;
   }
 
+  /// Explicit method alias for [currentStreak].
+  int calculateDynamicStreak() => currentStreak;
+
   // --- Initializer & Local Storage ---
 
   Future<void> _initializeData() async {

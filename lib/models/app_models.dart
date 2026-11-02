@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Represents a preferred daily time window for focus sessions.
 class TimeWindow {
   final int startHour;
@@ -360,6 +358,8 @@ class AppSettings {
     this.themeMode = 'sereneSky',
     this.precisionShowCentiseconds = false,
   });
+
+  bool get precisionEnabled => precisionShowCentiseconds;
 
   AppSettings copyWith({
     String? themeMode,

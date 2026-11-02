@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:magn/main.dart';
 import 'package:magn/models/app_models.dart';
 import 'package:magn/screens/active_focus_screen.dart';
-import 'package:magn/screens/settings_sheet.dart';
 import 'package:magn/state/app_controller.dart';
 import 'package:magn/theme/sky_theme.dart';
 import 'package:magn/widgets/pedestal_node.dart';
