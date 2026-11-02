@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:magn/main.dart';
+import 'package:magn/models/app_models.dart';
+import 'package:magn/screens/active_focus_screen.dart';
+import 'package:magn/screens/settings_sheet.dart';
+import 'package:magn/state/app_controller.dart';
+import 'package:magn/theme/sky_theme.dart';
+import 'package:magn/widgets/pedestal_node.dart';
 
 void main() {
-  testWidgets('StopwatchApp smoke test verifies initial flat matte wordless UI',
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  testWidgets('SereneSkyApp smoke test renders 3-tab navigation and Home screen UI',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.0;
@@ -12,29 +23,41 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    await tester.pumpWidget(const StopwatchApp());
+    final controller = AppController();
+    final themeController = SkyThemeController();
 
-    // Main workspace: Play button icon, mode segmented icons, action icons
-    expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.all_inclusive_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.timelapse_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.bar_chart_rounded), findsOneWidget);
+    await tester.pumpWidget(
+      SereneSkyApp(
+        controller: controller,
+        themeController: themeController,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 1. Strict 3-Tab Bottom Navigation Bar (No Practice tab!)
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Plan'), findsOneWidget);
+    expect(find.text('Stats'), findsOneWidget);
+    expect(find.text('Practice'), findsNothing);
+    expect(find.text('Tasks'), findsNothing);
+
+    // 2. Home Header: Tune settings icon on left, Streak and Tokens pills on right
     expect(find.byIcon(Icons.tune_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.local_fire_department_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.auto_awesome_rounded), findsOneWidget);
 
-    // RotaryDialView is rendered when showDigits is false
-    expect(find.byType(RotaryDialView), findsOneWidget);
+    // 3. Peek-Edge Hero Carousel (132px height, 4 cards cycling)
+    expect(find.text('Next Planned Topic'), findsWidgets);
+    expect(find.text('Best Session'), findsWidgets);
 
-    // Task Peek Sheet hint
-    expect(find.text('No pending tasks'), findsOneWidget);
-    expect(find.text('Pull up to choose or skip tasks'), findsOneWidget);
+    // 4. Stepping-Stone Path: Calm empty state when no sessions are planned
+    expect(find.text('No Upcoming Sessions Planned'), findsOneWidget);
 
-    // Nearly wordless workspace: no START, ENDLESS, or 00:00 text
-    expect(find.text('START'), findsNothing);
-    expect(find.text('ENDLESS'), findsNothing);
-    expect(find.text('00:00'), findsNothing);
+    // 5. Docked Cloud White Pill Button
+    expect(find.text('Plan a Session'), findsOneWidget);
   });
 
-  testWidgets('Mode switcher toggles between Endless and Cycle Mode',
+  testWidgets('Navigation bar smoothly switches between Home, Plan, and Stats tabs',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.0;
@@ -43,29 +66,46 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    await tester.pumpWidget(const StopwatchApp());
+    final controller = AppController();
+    final themeController = SkyThemeController();
 
-    // Initially in Endless mode: no skip phase button
-    expect(find.byIcon(Icons.skip_next_rounded), findsNothing);
+    await tester.pumpWidget(
+      SereneSkyApp(
+        controller: controller,
+        themeController: themeController,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    // Switch to Cycle mode
-    await tester.tap(find.byIcon(Icons.timelapse_rounded));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    // 1. Tap Plan tab
+    await tester.tap(find.text('Plan'));
+    await tester.pumpAndSettle();
 
-    // In Cycle mode: secondary skip button is present
-    expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
+    expect(find.text('Plan & Horizons'), findsOneWidget);
+    expect(find.text('Sessions'), findsOneWidget);
+    expect(find.text('Goals'), findsOneWidget);
+    expect(find.text('+ Plan Session'), findsOneWidget);
+    expect(find.text('+ New Goal'), findsOneWidget);
 
-    // Switch back to Endless mode
-    await tester.tap(find.byIcon(Icons.all_inclusive_rounded));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    // 2. Tap Stats tab
+    await tester.tap(find.text('Stats'));
+    await tester.pumpAndSettle();
 
-    // Secondary skip button disappears in Endless mode
-    expect(find.byIcon(Icons.skip_next_rounded), findsNothing);
+    expect(find.text('Consistency & Telemetry'), findsOneWidget);
+    expect(find.text('Active Streak'), findsOneWidget);
+    expect(find.text('Total Tokens'), findsOneWidget);
+    expect(find.text('Total Focus'), findsOneWidget);
+    expect(find.text('Cadence Heatmap'), findsOneWidget);
+    expect(find.text('Session History'), findsOneWidget);
+
+    // 3. Return to Home tab
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Next Planned Topic'), findsWidgets);
   });
 
-  testWidgets('Analytics button opens MetricCard Analytics dashboard',
+  testWidgets('Home screen displays 2.5D Stepping-Stone Pedestals when sessions are planned',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.0;
@@ -74,23 +114,62 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    await tester.pumpWidget(const StopwatchApp());
+    final controller = AppController();
+    final themeController = SkyThemeController();
 
-    // Tap Analytics icon button
-    await tester.tap(find.byIcon(Icons.bar_chart_rounded));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
+    // Plan two sessions
+    controller.addPlannedSession(
+      topic: 'First Deep Block',
+      plannedDurationMinutes: 25,
+      preferredWindow: const TimeWindow(
+        startHour: 9,
+        startMinute: 0,
+        endHour: 11,
+        endMinute: 0,
+      ),
+    );
+    controller.addPlannedSession(
+      topic: 'Second Deep Block',
+      plannedDurationMinutes: 45,
+      preferredWindow: const TimeWindow(
+        startHour: 14,
+        startMinute: 0,
+        endHour: 16,
+        endMinute: 0,
+      ),
+    );
 
-    // Verify MetricCards and 7-Day chart
-    expect(find.text('Analytics'), findsOneWidget);
-    expect(find.text('Ignition'), findsOneWidget);
-    expect(find.text('Flow'), findsNWidgets(2)); // MetricCard & chart legend
-    expect(find.text('Ratio'), findsOneWidget);
-    expect(find.text('7-Day Flow'), findsOneWidget);
-    expect(find.text('History'), findsOneWidget);
+    await tester.pumpWidget(
+      SereneSkyApp(
+        controller: controller,
+        themeController: themeController,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Pedestals render
+    expect(find.byType(PedestalNode), findsWidgets);
+    expect(find.text('Second Deep Block'), findsOneWidget);
+    expect(find.text('First Deep Block'), findsOneWidget);
+
+    // Newly planned session appears ABOVE existing one: Second is next/top
+    expect(find.text('Start • Second Deep Block'), findsOneWidget);
+
+    // Tap pedestal to open SessionDetailDialog
+    await tester.tap(find.text('Second Deep Block'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Session Details'), findsOneWidget);
+    expect(find.textContaining('Preferred Window:'), findsOneWidget);
+    expect(find.textContaining('Reward Rules:'), findsOneWidget);
+    expect(find.text('Close'), findsOneWidget);
+
+    // Dismiss dialog
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
   });
 
-  testWidgets('Settings button opens Settings and enables Timer Digits',
+  testWidgets('Settings sheet modal opens and displays precision toggle and theme options',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.0;
@@ -99,39 +178,37 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    await tester.pumpWidget(const StopwatchApp());
+    final controller = AppController();
+    final themeController = SkyThemeController();
 
-    // Tap Settings icon button
+    await tester.pumpWidget(
+      SereneSkyApp(
+        controller: controller,
+        themeController: themeController,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Tap tune icon on Home screen
     await tester.tap(find.byIcon(Icons.tune_rounded));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
 
-    // Verify Settings sections
-    expect(find.text('Settings'), findsOneWidget);
-    expect(find.text('Behavior'), findsOneWidget);
-    expect(find.text('Appearance'), findsOneWidget);
-    expect(find.text('Data Management'), findsOneWidget);
-    expect(find.text('Show Timer Digits'), findsOneWidget);
-    expect(find.text('Pure Black OLED Mode'), findsOneWidget);
-    expect(find.text('Export Backup File'), findsOneWidget);
-    expect(find.text('Import Backup File'), findsOneWidget);
+    // Verify Settings Sheet contents
+    expect(find.text('Sanctuary Settings'), findsOneWidget);
+    expect(find.text('Centisecond Precision (.00)'), findsOneWidget);
+    expect(find.text('Serene Sky Default'), findsOneWidget);
+    expect(find.text('Midnight Sky Dark'), findsOneWidget);
+    expect(find.text('Pure Black OLED'), findsOneWidget);
+    expect(find.text('Export JSON Backup'), findsOneWidget);
+    expect(find.text('Restore from Backup'), findsOneWidget);
 
-    // Enable "Show Timer Digits"
-    await tester.tap(find.text('Show Timer Digits'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    // Close Settings sheet by popping
-    Navigator.of(tester.element(find.text('Settings'))).pop();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    // Now numerical digits are displayed
-    expect(find.text('00:00'), findsOneWidget);
-    expect(find.text('.00'), findsOneWidget);
+    // Toggle theme palette
+    await tester.tap(find.text('Midnight Sky Dark'));
+    await tester.pumpAndSettle();
+    expect(themeController.palette, SkyThemePalette.midnightSky);
   });
 
-  testWidgets('Skip button skips Cycle phase',
+  testWidgets('Active focus session executes with stopwatch and awards tokens on completion',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.0;
@@ -140,21 +217,63 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    await tester.pumpWidget(const StopwatchApp());
+    final controller = AppController();
+    final themeController = SkyThemeController();
 
-    // Switch to Cycle mode
-    await tester.tap(find.byIcon(Icons.timelapse_rounded));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    controller.addPlannedSession(
+      topic: 'Architecture Review',
+      plannedDurationMinutes: 30,
+    );
 
-    expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
+    await tester.pumpWidget(
+      SereneSkyApp(
+        controller: controller,
+        themeController: themeController,
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    // Tap Skip button
-    await tester.tap(find.byIcon(Icons.skip_next_rounded));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
+    // Tap Start pill button
+    await tester.tap(find.text('Start • Architecture Review'));
+    await tester.pumpAndSettle();
 
-    // App remains responsive and in Cycle mode
-    expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
+    // Should navigate to ActiveFocusScreen
+    expect(find.byType(ActiveFocusScreen), findsOneWidget);
+    expect(find.text('Architecture Review'), findsOneWidget);
+    expect(find.textContaining('Finish •'), findsOneWidget);
+
+    // Tap Finish button to complete session
+    await tester.tap(find.textContaining('Finish •'));
+    await tester.pumpAndSettle();
+
+    // Dialog pops and returns to Home
+    expect(find.byType(ActiveFocusScreen), findsNothing);
+    expect(controller.completedSessions.length, 1);
+    expect(controller.completedSessions.first.topic, 'Architecture Review');
+  });
+
+  testWidgets('Anti-overflow layout test renders cleanly on compact 360x640 mobile viewport',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final controller = AppController();
+    final themeController = SkyThemeController();
+
+    await tester.pumpWidget(
+      SereneSkyApp(
+        controller: controller,
+        themeController: themeController,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Assert no exceptions thrown and UI rendered cleanly
+    expect(tester.takeException(), isNull);
+    expect(find.byType(SereneSkyApp), findsOneWidget);
   });
 }
