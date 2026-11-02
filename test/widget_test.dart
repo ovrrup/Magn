@@ -104,7 +104,7 @@ void main() {
     expect(find.text('TOTAL TOKENS'), findsOneWidget);
     expect(find.text('TOTAL FOCUS'), findsOneWidget);
     expect(find.text('Focus Consistency Matrix'), findsOneWidget);
-    expect(find.text('Session History'), findsOneWidget);
+    expect(find.text('Chronological Session History'), findsOneWidget);
 
     // 3. Return to Home tab
     await tester.tap(find.text('Home'));
@@ -167,13 +167,13 @@ void main() {
     await tester.tap(find.text('Second Deep Block').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Session Details'), findsOneWidget);
-    expect(find.textContaining('Preferred Window:'), findsOneWidget);
-    expect(find.textContaining('Reward Rules:'), findsOneWidget);
-    expect(find.text('Close'), findsOneWidget);
+    expect(find.text('Session Blueprint'), findsOneWidget);
+    expect(find.text('PREFERRED WINDOW'), findsOneWidget);
+    expect(find.text('TOKEN REWARD RULES'), findsOneWidget);
+    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
 
     // Dismiss dialog
-    await tester.tap(find.text('Close'));
+    await tester.tap(find.byIcon(Icons.close_rounded));
     await tester.pumpAndSettle();
   });
 

@@ -278,31 +278,30 @@ class SessionDetailDialog extends StatelessWidget {
             children: [
               // Header Row
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: palette.amberGold.withOpacity(0.25),
-                          border: Border.all(color: palette.amberGold, width: 1.5),
-                        ),
-                        child: Icon(Icons.layers_rounded, color: palette.amberGold, size: 20),
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: palette.amberGold.withOpacity(0.25),
+                      border: Border.all(color: palette.amberGold, width: 1.5),
+                    ),
+                    child: Icon(Icons.layers_rounded, color: palette.amberGold, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Session Blueprint',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'sans-serif',
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: palette.primaryText,
                       ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Session Blueprint',
-                        style: TextStyle(
-                          fontFamily: 'sans-serif',
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: palette.primaryText,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close_rounded, color: Colors.white),
