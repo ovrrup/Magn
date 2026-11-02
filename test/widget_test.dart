@@ -59,7 +59,7 @@ void main() {
     expect(find.text('BEST COMPLETED SESSION'), findsWidgets);
 
     // 4. Stepping-Stone Path: Calm empty state when no sessions are planned
-    expect(find.text('No Upcoming Sessions Planned'), findsOneWidget);
+    expect(find.text('Sanctuary Horizon Clear'), findsOneWidget);
 
     // 5. Docked Cloud White Pill Button
     expect(find.text('Plan a Session'), findsOneWidget);
@@ -103,7 +103,7 @@ void main() {
     expect(find.text('ACTIVE STREAK'), findsOneWidget);
     expect(find.text('TOTAL TOKENS'), findsOneWidget);
     expect(find.text('TOTAL FOCUS'), findsOneWidget);
-    expect(find.text('Cadence Heatmap'), findsOneWidget);
+    expect(find.text('Focus Consistency Matrix'), findsOneWidget);
     expect(find.text('Session History'), findsOneWidget);
 
     // 3. Return to Home tab
@@ -164,7 +164,7 @@ void main() {
     expect(find.text('Start • Second Deep Block'), findsOneWidget);
 
     // Tap pedestal to open SessionDetailDialog
-    await tester.tap(find.text('Second Deep Block'));
+    await tester.tap(find.text('Second Deep Block').last);
     await tester.pumpAndSettle();
 
     expect(find.text('Session Details'), findsOneWidget);
@@ -208,7 +208,7 @@ void main() {
     expect(find.text('Midnight Dark'), findsOneWidget);
     expect(find.text('Pure Black'), findsOneWidget);
     expect(find.text('Export Backup'), findsOneWidget);
-    expect(find.text('Restore Backup'), findsOneWidget);
+    expect(find.text('Restore Archive'), findsOneWidget);
 
     // Toggle theme palette
     await tester.tap(find.text('Midnight Dark'));

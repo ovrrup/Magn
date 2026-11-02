@@ -71,7 +71,6 @@ class ActiveFocusScreen extends StatelessWidget {
 
                   // Top Bar: Cancel button & Status Pill
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       SkyGlassCard(
                         padding: EdgeInsets.zero,
@@ -87,38 +86,48 @@ class ActiveFocusScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      SkyGlassPill(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: palette.mintAura,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: palette.mintAura.withOpacity(0.6),
-                                    blurRadius: 6,
-                                    spreadRadius: 1,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Center(
+                          child: SkyGlassPill(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: palette.mintAura,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: palette.mintAura.withOpacity(0.6),
+                                        blurRadius: 6,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    'Active Focus',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontFamily: 'sans-serif',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: palette.primaryText,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Active Focus Sanctuary',
-                              style: TextStyle(
-                                fontFamily: 'sans-serif',
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: palette.primaryText,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       const SizedBox(width: 42), // Balance symmetry
                     ],
                   ),
