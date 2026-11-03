@@ -204,12 +204,9 @@ class SkyPillButton extends StatelessWidget {
             Flexible(
               child: Text(
                 label,
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
+                style: AppTypography.button(
                   fontSize: 16,
-                  fontWeight: FontWeight.w600,
                   color: fg,
-                  letterSpacing: 0.1,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

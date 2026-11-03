@@ -65,12 +65,8 @@ class StatsScreen extends StatelessWidget {
                     'STREAK',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                    style: AppTypography.microLabel(
                       color: palette.secondaryText,
-                      letterSpacing: 0.8,
                     ),
                   ),
                   FittedBox(
@@ -78,8 +74,7 @@ class StatsScreen extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       '${controller.currentStreak}d',
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
+                      style: AppTypography.numeric(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                         color: palette.amberGold,
@@ -109,12 +104,8 @@ class StatsScreen extends StatelessWidget {
                     'TOKENS',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                    style: AppTypography.microLabel(
                       color: palette.secondaryText,
-                      letterSpacing: 0.8,
                     ),
                   ),
                   FittedBox(
@@ -122,8 +113,7 @@ class StatsScreen extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       '${controller.walletTokenBalance}',
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
+                      style: AppTypography.numeric(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                         color: palette.primaryText,
@@ -153,12 +143,8 @@ class StatsScreen extends StatelessWidget {
                     'HOURS',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                    style: AppTypography.microLabel(
                       color: palette.secondaryText,
-                      letterSpacing: 0.8,
                     ),
                   ),
                   FittedBox(
@@ -166,8 +152,7 @@ class StatsScreen extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       '${totalFocusHours}h',
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
+                      style: AppTypography.numeric(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                         color: palette.primaryText,
@@ -212,10 +197,8 @@ class StatsScreen extends StatelessWidget {
                   'Activity',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'sans-serif',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.display(
+                    fontSize: 16,
                     color: palette.primaryText,
                   ),
                 ),
@@ -223,9 +206,9 @@ class StatsScreen extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 '12 Weeks',
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
+                style: AppTypography.label(
                   fontSize: 11,
+                  fontWeight: FontWeight.w500,
                   color: palette.secondaryText,
                 ),
               ),
@@ -339,8 +322,7 @@ class StatsScreen extends StatelessWidget {
       children: [
         Text(
           'Recent',
-          style: TextStyle(
-            fontFamily: 'sans-serif',
+          style: AppTypography.display(
             fontSize: 14,
             fontWeight: FontWeight.w700,
             color: palette.primaryText,
@@ -378,8 +360,7 @@ class StatsScreen extends StatelessWidget {
                         children: [
                           Text(
                             s.topic,
-                            style: TextStyle(
-                              fontFamily: 'sans-serif',
+                            style: AppTypography.display(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: palette.primaryText,
@@ -390,8 +371,7 @@ class StatsScreen extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             '${s.elapsedMinutes}m Focus • ${s.windowMultiplier}x Window',
-                            style: TextStyle(
-                              fontFamily: 'sans-serif',
+                            style: AppTypography.label(
                               fontSize: 11,
                               color: palette.secondaryText,
                             ),
@@ -404,8 +384,7 @@ class StatsScreen extends StatelessWidget {
                       children: [
                         Text(
                           '+${s.totalTokensEarned} Tokens',
-                          style: TextStyle(
-                            fontFamily: 'sans-serif',
+                          style: AppTypography.numeric(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: palette.amberGold,
@@ -414,8 +393,7 @@ class StatsScreen extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           dateStr,
-                          style: TextStyle(
-                            fontFamily: 'sans-serif',
+                          style: AppTypography.numeric(
                             fontSize: 10,
                             color: palette.secondaryText.withOpacity(0.8),
                           ),

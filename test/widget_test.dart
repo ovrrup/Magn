@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:magn/main.dart';
 import 'package:magn/models/app_models.dart';
@@ -10,6 +11,7 @@ import 'package:magn/widgets/pedestal_node.dart';
 
 void main() {
   setUp(() {
+    GoogleFonts.config.allowRuntimeFetching = false;
     SharedPreferences.setMockInitialValues({});
     FlutterError.onError = (FlutterErrorDetails details) {
       final msg = details.exceptionAsString();
@@ -211,16 +213,25 @@ void main() {
     expect(find.text('Settings'), findsOneWidget);
     expect(find.text('Sanctuary Calibration & Settings'), findsNothing);
     expect(find.text('Precision (.00)'), findsOneWidget);
-    expect(find.text('Serene Sky'), findsOneWidget);
+    expect(find.text('System'), findsOneWidget);
+    expect(find.text('Sky'), findsOneWidget);
     expect(find.text('Midnight'), findsOneWidget);
-    expect(find.text('Pure Black'), findsOneWidget);
+    expect(find.text('OLED'), findsOneWidget);
+    expect(find.text('Pure Black for Dark Mode'), findsOneWidget);
     expect(find.text('Export'), findsOneWidget);
     expect(find.text('Import'), findsOneWidget);
 
-    // Toggle theme palette
+    // Toggle theme palette to Midnight
     await tester.tap(find.text('Midnight'));
     await tester.pumpAndSettle();
+    expect(themeController.mode, SkyThemeMode.midnightSky);
     expect(themeController.palette, SkyThemePalette.midnightSky);
+
+    // Toggle theme palette to OLED
+    await tester.tap(find.text('OLED'));
+    await tester.pumpAndSettle();
+    expect(themeController.mode, SkyThemeMode.oledBlack);
+    expect(themeController.palette, SkyThemePalette.oledBlack);
   });
 
   testWidgets('Plan Session and Goal sheets open with decluttered inputs and save correctly',

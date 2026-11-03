@@ -139,8 +139,7 @@ class _PlanScreenState extends State<PlanScreen> {
         alignment: Alignment.center,
         child: Text(
           label,
-          style: TextStyle(
-            fontFamily: 'sans-serif',
+          style: AppTypography.label(
             fontSize: 14,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             color: isSelected
@@ -231,8 +230,7 @@ class _PlanScreenState extends State<PlanScreen> {
                       Flexible(
                         child: Text(
                           session.topic,
-                          style: TextStyle(
-                            fontFamily: 'sans-serif',
+                          style: AppTypography.display(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: palette.primaryText,
@@ -251,10 +249,8 @@ class _PlanScreenState extends State<PlanScreen> {
                           ),
                           child: Text(
                             'Active Window',
-                            style: TextStyle(
-                              fontFamily: 'sans-serif',
+                            style: AppTypography.microLabel(
                               fontSize: 9,
-                              fontWeight: FontWeight.w700,
                               color: palette.primaryText,
                             ),
                           ),
@@ -265,8 +261,7 @@ class _PlanScreenState extends State<PlanScreen> {
                   const SizedBox(height: 3),
                   Text(
                     '${session.plannedDurationMinutes}m Focus • ${session.preferredWindow?.toDisplayString() ?? "Flexible Window"}',
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
+                    style: AppTypography.label(
                       fontSize: 11,
                       color: palette.secondaryText,
                     ),
@@ -366,8 +361,7 @@ class _PlanScreenState extends State<PlanScreen> {
                       Flexible(
                         child: Text(
                           goal.title,
-                          style: TextStyle(
-                            fontFamily: 'sans-serif',
+                          style: AppTypography.display(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: palette.primaryText,
@@ -386,10 +380,8 @@ class _PlanScreenState extends State<PlanScreen> {
                           ),
                           child: Text(
                             'Urgent',
-                            style: TextStyle(
-                              fontFamily: 'sans-serif',
+                            style: AppTypography.microLabel(
                               fontSize: 9,
-                              fontWeight: FontWeight.w700,
                               color: palette.primaryText,
                             ),
                           ),
@@ -400,8 +392,7 @@ class _PlanScreenState extends State<PlanScreen> {
                   const SizedBox(height: 3),
                   Text(
                     deadlineStr,
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
+                    style: AppTypography.label(
                       fontSize: 11,
                       color: isApproaching ? palette.deadlineAlertCoral : palette.secondaryText,
                       fontWeight: isApproaching ? FontWeight.w600 : FontWeight.w400,
@@ -428,10 +419,8 @@ class _PlanScreenState extends State<PlanScreen> {
         const SizedBox(width: 4),
         Text(
           title,
-          style: TextStyle(
-            fontFamily: 'sans-serif',
+          style: AppTypography.microLabel(
             fontSize: 11,
-            fontWeight: FontWeight.w700,
             color: palette.deadlineAlertCoral,
             letterSpacing: 0.8,
           ),
@@ -443,10 +432,8 @@ class _PlanScreenState extends State<PlanScreen> {
   Widget _buildSectionHeader(String title, SkyPalette palette) {
     return Text(
       title,
-      style: TextStyle(
-        fontFamily: 'sans-serif',
+      style: AppTypography.microLabel(
         fontSize: 10,
-        fontWeight: FontWeight.w700,
         color: palette.secondaryText,
         letterSpacing: 0.8,
       ),
@@ -472,11 +459,11 @@ class _PlanScreenState extends State<PlanScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(27)),
                 ),
                 onPressed: () => showPlanSessionModal(context, controller, palette),
-                child: const FittedBox(
+                child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
                     '+ Plan Session',
-                    style: TextStyle(fontFamily: 'sans-serif', fontSize: 14, fontWeight: FontWeight.w600),
+                    style: AppTypography.button(fontSize: 14, color: palette.pillButtonText),
                   ),
                 ),
               ),
@@ -497,11 +484,11 @@ class _PlanScreenState extends State<PlanScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(27)),
                 ),
                 onPressed: () => showNewGoalModal(context, controller, palette),
-                child: const FittedBox(
+                child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
                     '+ New Goal',
-                    style: TextStyle(fontFamily: 'sans-serif', fontSize: 14, fontWeight: FontWeight.w600),
+                    style: AppTypography.button(fontSize: 14, color: palette.pillButtonText),
                   ),
                 ),
               ),
@@ -534,7 +521,7 @@ class _PlanScreenState extends State<PlanScreen> {
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: palette.isDark ? const Color(0xFF1E293B) : const Color(0xFF3888E6),
+                  color: palette.modalBackground,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                   border: Border.all(color: Colors.white.withOpacity(0.35)),
                 ),
@@ -559,14 +546,12 @@ class _PlanScreenState extends State<PlanScreen> {
                       // Header Row
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Text(
                               'New Session',
-                              style: TextStyle(
-                                fontFamily: 'sans-serif',
+                              style: AppTypography.display(
                                 fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFFFFFFFF),
+                                color: const Color(0xFFFFFFFF),
                               ),
                             ),
                           ),
@@ -586,15 +571,13 @@ class _PlanScreenState extends State<PlanScreen> {
                         height: 54,
                         child: TextField(
                           controller: topicController,
-                          style: const TextStyle(
-                            fontFamily: 'sans-serif',
+                          style: AppTypography.label(
                             fontSize: 15,
                             color: Colors.white,
                           ),
                           decoration: InputDecoration(
                             hintText: 'Focus topic...',
-                            hintStyle: TextStyle(
-                              fontFamily: 'sans-serif',
+                            hintStyle: AppTypography.label(
                               fontSize: 15,
                               color: Colors.white.withOpacity(0.60),
                             ),
@@ -630,8 +613,7 @@ class _PlanScreenState extends State<PlanScreen> {
                                   ),
                                   child: Text(
                                     'No goal',
-                                    style: TextStyle(
-                                      fontFamily: 'sans-serif',
+                                    style: AppTypography.label(
                                       fontSize: 13,
                                       fontWeight: selectedGoalId == null ? FontWeight.w700 : FontWeight.w500,
                                       color: selectedGoalId == null
@@ -663,8 +645,7 @@ class _PlanScreenState extends State<PlanScreen> {
                                     ),
                                     child: Text(
                                       g.title,
-                                      style: TextStyle(
-                                        fontFamily: 'sans-serif',
+                                      style: AppTypography.label(
                                         fontSize: 13,
                                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                         color: isSelected
@@ -705,8 +686,7 @@ class _PlanScreenState extends State<PlanScreen> {
                                     fit: BoxFit.scaleDown,
                                     child: Text(
                                       '${d}m',
-                                      style: TextStyle(
-                                        fontFamily: 'sans-serif',
+                                      style: AppTypography.numeric(
                                         fontSize: 14,
                                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                         color: isSelected
@@ -736,11 +716,10 @@ class _PlanScreenState extends State<PlanScreen> {
                           children: [
                             Row(
                               children: [
-                                const Expanded(
+                                Expanded(
                                   child: Text(
                                     'Time Window',
-                                    style: TextStyle(
-                                      fontFamily: 'sans-serif',
+                                    style: AppTypography.label(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.white,
@@ -778,8 +757,7 @@ class _PlanScreenState extends State<PlanScreen> {
                                           fit: BoxFit.scaleDown,
                                           child: Text(
                                             startTime.format(ctx),
-                                            style: const TextStyle(
-                                              fontFamily: 'sans-serif',
+                                            style: AppTypography.numeric(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600,
                                               color: Colors.white,
@@ -814,8 +792,7 @@ class _PlanScreenState extends State<PlanScreen> {
                                           fit: BoxFit.scaleDown,
                                           child: Text(
                                             endTime.format(ctx),
-                                            style: const TextStyle(
-                                              fontFamily: 'sans-serif',
+                                            style: AppTypography.numeric(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600,
                                               color: Colors.white,
@@ -869,14 +846,15 @@ class _PlanScreenState extends State<PlanScreen> {
                             );
                             Navigator.of(ctx).pop();
                           },
-                          child: const Text(
+                          child: Text(
                             'Save Session',
-                            style: TextStyle(
-                              fontFamily: 'sans-serif',
+                            style: AppTypography.button(
                               fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
                             ),
                           ),
+                        ),
+                      ),
                         ),
                       ),
                     ],
@@ -908,7 +886,7 @@ class _PlanScreenState extends State<PlanScreen> {
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: palette.isDark ? const Color(0xFF1E293B) : const Color(0xFF3888E6),
+                  color: palette.modalBackground,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                   border: Border.all(color: Colors.white.withOpacity(0.35)),
                 ),
@@ -933,14 +911,12 @@ class _PlanScreenState extends State<PlanScreen> {
                       // Header Row
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Text(
                               'New Goal',
-                              style: TextStyle(
-                                fontFamily: 'sans-serif',
+                              style: AppTypography.display(
                                 fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFFFFFFFF),
+                                color: const Color(0xFFFFFFFF),
                               ),
                             ),
                           ),
@@ -960,15 +936,13 @@ class _PlanScreenState extends State<PlanScreen> {
                         height: 54,
                         child: TextField(
                           controller: titleController,
-                          style: const TextStyle(
-                            fontFamily: 'sans-serif',
+                          style: AppTypography.label(
                             fontSize: 15,
                             color: Colors.white,
                           ),
                           decoration: InputDecoration(
                             hintText: 'Goal title...',
-                            hintStyle: TextStyle(
-                              fontFamily: 'sans-serif',
+                            hintStyle: AppTypography.label(
                               fontSize: 15,
                               color: Colors.white.withOpacity(0.60),
                             ),
@@ -998,13 +972,12 @@ class _PlanScreenState extends State<PlanScreen> {
                           children: [
                             const Icon(Icons.event_rounded, size: 18, color: Colors.white),
                             const SizedBox(width: 8),
-                            const Expanded(
+                            Expanded(
                               child: Text(
                                 'Target Date',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontFamily: 'sans-serif',
+                                style: AppTypography.label(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
@@ -1037,8 +1010,7 @@ class _PlanScreenState extends State<PlanScreen> {
                                       selectedDeadline != null
                                           ? '${selectedDeadline!.year}-${selectedDeadline!.month.toString().padLeft(2, '0')}-${selectedDeadline!.day.toString().padLeft(2, '0')}'
                                           : 'Optional',
-                                      style: TextStyle(
-                                        fontFamily: 'sans-serif',
+                                      style: AppTypography.numeric(
                                         fontSize: 13,
                                         fontWeight: selectedDeadline != null ? FontWeight.w600 : FontWeight.w500,
                                         color: Colors.white,
@@ -1091,12 +1063,11 @@ class _PlanScreenState extends State<PlanScreen> {
                             );
                             Navigator.of(ctx).pop();
                           },
-                          child: const Text(
+                          child: Text(
                             'Save Goal',
-                            style: TextStyle(
-                              fontFamily: 'sans-serif',
+                            style: AppTypography.button(
                               fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
                             ),
                           ),
                         ),

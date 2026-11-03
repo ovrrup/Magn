@@ -458,6 +458,14 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  Future<void> togglePureBlackForDark() async {
+    _settings = _settings.copyWith(
+      usePureBlackForDark: !_settings.usePureBlackForDark,
+    );
+    await _persistAll();
+    notifyListeners();
+  }
+
   // --- JSON File Backup & Atomic Restoration ---
 
   String exportBackupJson() {
@@ -589,15 +597,14 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
         builder: (ctx) {
           final palette = SkyThemeScope.paletteOf(ctx);
           return AlertDialog(
-            backgroundColor: palette.isDark ? const Color(0xFF1E293B) : const Color(0xFF3888E6),
+            backgroundColor: palette.modalBackground,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(color: Colors.white.withOpacity(0.35)),
             ),
             title: Text(
               'Restore Archive',
-              style: TextStyle(
-                fontFamily: 'sans-serif',
+              style: AppTypography.display(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: palette.primaryText,
@@ -605,8 +612,7 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
             ),
             content: Text(
               'Do you want to merge imported records with existing data, or overwrite entirely?',
-              style: TextStyle(
-                fontFamily: 'sans-serif',
+              style: AppTypography.label(
                 fontSize: 14,
                 color: palette.secondaryText,
               ),
@@ -614,11 +620,11 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop('merge'),
-                child: Text('Merge Data', style: TextStyle(color: palette.mintAura)),
+                child: Text('Merge Data', style: AppTypography.button(fontSize: 14, color: palette.mintAura)),
               ),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop('overwrite'),
-                child: Text('Overwrite', style: TextStyle(color: palette.deadlineAlertCoral)),
+                child: Text('Overwrite', style: AppTypography.button(fontSize: 14, color: palette.deadlineAlertCoral)),
               ),
             ],
           );

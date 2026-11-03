@@ -438,11 +438,13 @@ class CompletedSession {
 
 /// Application settings and user preferences.
 class AppSettings {
-  final String themeMode; // 'sereneSky', 'midnightSky', 'oledBlack'
+  final String themeMode; // 'system', 'sereneSky', 'midnightSky', 'oledBlack'
+  final bool usePureBlackForDark; // If true, dark mode renders as OLED Pure Black
   final bool precisionShowCentiseconds;
 
   const AppSettings({
-    this.themeMode = 'sereneSky',
+    this.themeMode = 'system',
+    this.usePureBlackForDark = false,
     this.precisionShowCentiseconds = false,
   });
 
@@ -450,10 +452,12 @@ class AppSettings {
 
   AppSettings copyWith({
     String? themeMode,
+    bool? usePureBlackForDark,
     bool? precisionShowCentiseconds,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
+      usePureBlackForDark: usePureBlackForDark ?? this.usePureBlackForDark,
       precisionShowCentiseconds:
           precisionShowCentiseconds ?? this.precisionShowCentiseconds,
     );
@@ -461,12 +465,14 @@ class AppSettings {
 
   Map<String, dynamic> toJson() => {
         'themeMode': themeMode,
+        'usePureBlackForDark': usePureBlackForDark,
         'precisionShowCentiseconds': precisionShowCentiseconds,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
     return AppSettings(
-      themeMode: json['themeMode'] as String? ?? 'sereneSky',
+      themeMode: json['themeMode'] as String? ?? 'system',
+      usePureBlackForDark: json['usePureBlackForDark'] as bool? ?? false,
       precisionShowCentiseconds:
           json['precisionShowCentiseconds'] as bool? ?? false,
     );

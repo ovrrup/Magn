@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'screens/app_shell.dart';
 import 'state/app_controller.dart';
 import 'theme/sky_theme.dart';
@@ -46,15 +47,28 @@ class _SereneSkyAppState extends State<SereneSkyApp> {
   @override
   void initState() {
     super.initState();
-    _themeController = widget.themeController ?? SkyThemeController();
     _appController = widget.controller ?? AppController();
+    _themeController = widget.themeController ??
+        SkyThemeController(
+          initialMode: SkyThemeModeExtension.fromString(_appController.settings.themeMode),
+          initialUsePureBlackForDark: _appController.settings.usePureBlackForDark,
+        );
     if (widget.controller == null && widget.themeController == null) {
       _ownsControllers = true;
     }
+    _syncTheme();
+    _appController.addListener(_syncTheme);
+  }
+
+  void _syncTheme() {
+    final mode = SkyThemeModeExtension.fromString(_appController.settings.themeMode);
+    _themeController.setMode(mode);
+    _themeController.setUsePureBlackForDark(_appController.settings.usePureBlackForDark);
   }
 
   @override
   void dispose() {
+    _appController.removeListener(_syncTheme);
     if (_ownsControllers) {
       _themeController.dispose();
       _appController.dispose();
@@ -100,7 +114,7 @@ class _SereneSkyAppState extends State<SereneSkyApp> {
                   tertiary: palette.mintAura,
                   surface: palette.glassSurfaceColor,
                 ),
-                fontFamily: 'sans-serif',
+                fontFamily: GoogleFonts.inter().fontFamily,
               ),
               home: const AppShell(),
             );

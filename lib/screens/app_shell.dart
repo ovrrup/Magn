@@ -161,8 +161,7 @@ class _AppShellState extends State<AppShell> {
               const SizedBox(height: 3),
               Text(
                 label,
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
+                style: AppTypography.label(
                   fontSize: 11,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   color: isSelected ? palette.navActiveIcon : palette.navInactiveIcon,

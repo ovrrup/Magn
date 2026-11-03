@@ -95,11 +95,10 @@ class ActiveFocusScreen extends StatelessWidget {
                               combinedTopicMultiplier,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontFamily: 'sans-serif',
+                              style: AppTypography.label(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFFFFFFFF), // Cloud White
+                                color: const Color(0xFFFFFFFF), // Cloud White
                               ),
                             ),
                           ),
@@ -116,28 +115,21 @@ class ActiveFocusScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   '$minutesStr:$secondsStr',
-                                  style: const TextStyle(
-                                    fontFamily: 'sans-serif',
+                                  style: AppTypography.numeric(
                                     fontSize: 76,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFFFFFFFF), // Cloud White
-                                    letterSpacing: 2.0,
-                                    fontFeatures: [
-                                      FontFeature.tabularFigures(),
-                                    ],
+                                    letterSpacing: -1.0,
+                                    color: const Color(0xFFFFFFFF), // Cloud White
                                   ),
                                 ),
                                 if (showCentiseconds) ...[
                                   Text(
                                     '.$centiStr',
-                                    style: TextStyle(
-                                      fontFamily: 'sans-serif',
+                                    style: AppTypography.numeric(
                                       fontSize: 32,
                                       fontWeight: FontWeight.w600,
+                                      letterSpacing: -1.0,
                                       color: const Color(0xFFFFFFFF).withOpacity(0.80),
-                                      fontFeatures: const [
-                                        FontFeature.tabularFigures(),
-                                      ],
                                     ),
                                   ),
                                 ],
@@ -184,11 +176,9 @@ class ActiveFocusScreen extends StatelessWidget {
                           fit: BoxFit.scaleDown,
                           child: Text(
                             'Finish • +${reward.totalTokens} Tokens',
-                            style: const TextStyle(
-                              fontFamily: 'sans-serif',
+                            style: AppTypography.button(
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF0F172A),
+                              color: const Color(0xFF0F172A),
                             ),
                           ),
                         ),
@@ -217,25 +207,26 @@ class ActiveFocusScreen extends StatelessWidget {
           ),
           title: Text(
             'Abandon Session?',
-            style: TextStyle(
-              fontFamily: 'sans-serif',
+            style: AppTypography.display(
               fontSize: 18,
-              fontWeight: FontWeight.w700,
               color: palette.primaryText,
             ),
           ),
           content: Text(
             'Cancelling will discard elapsed focus time and no token reward will be awarded.',
-            style: TextStyle(
-              fontFamily: 'sans-serif',
+            style: AppTypography.label(
               fontSize: 14,
+              fontWeight: FontWeight.w400,
               color: palette.secondaryText,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text('Keep Focusing', style: TextStyle(color: palette.primaryText)),
+              child: Text(
+                'Keep Focusing',
+                style: AppTypography.button(fontSize: 14, color: palette.primaryText),
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -243,7 +234,10 @@ class ActiveFocusScreen extends StatelessWidget {
                 controller.cancelFocusSession();
                 Navigator.of(context).pop(); // close screen
               },
-              child: Text('Abandon', style: TextStyle(color: palette.deadlineAlertCoral)),
+              child: Text(
+                'Abandon',
+                style: AppTypography.button(fontSize: 14, color: palette.deadlineAlertCoral),
+              ),
             ),
           ],
         );

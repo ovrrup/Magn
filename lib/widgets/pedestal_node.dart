@@ -129,8 +129,7 @@ class PedestalNode extends StatelessWidget {
             child: Text(
               displayTopic,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'sans-serif',
+              style: AppTypography.display(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: palette.primaryText,
@@ -166,8 +165,7 @@ class PedestalNode extends StatelessWidget {
                 ),
                 child: Text(
                   displayDuration,
-                  style: TextStyle(
-                    fontFamily: 'sans-serif',
+                  style: AppTypography.numeric(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: palette.primaryText,
@@ -188,8 +186,7 @@ class PedestalNode extends StatelessWidget {
                   ),
                   child: Text(
                     displayWindow,
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
+                    style: AppTypography.numeric(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: palette.primaryText,

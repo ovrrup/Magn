@@ -5,7 +5,8 @@ import '../theme/sky_theme.dart';
 /// Settings Sheet (Serene Sky Sanctuary).
 ///
 /// Features:
-/// - 3-Option Theme Palette Selector: Serene Sky, Midnight, Pure Black.
+/// - 4-Segment Theme Mode Selector: System, Sky, Midnight, OLED.
+/// - Pure Black for Dark Mode toggle: Allows 0-nit OLED even when using System theme.
 /// - Precision Toggle: Shows/hides .00 centiseconds on Active Focus.
 /// - File-Based JSON Backup & Atomic Restore: Export / Import.
 class SettingsSheet extends StatelessWidget {
@@ -27,21 +28,23 @@ class SettingsSheet extends StatelessWidget {
     final controller = AppControllerScope.of(context);
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.55,
+      initialChildSize: 0.60,
       minChildSize: 0.35,
-      maxChildSize: 0.85,
+      maxChildSize: 0.90,
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: palette.isDark ? const Color(0xFF0F172A) : const Color(0xFF285CB2),
+            color: palette.modalBackground,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             border: Border.all(
-              color: Colors.white.withOpacity(palette.isDark ? 0.20 : 0.40),
+              color: palette.isOled
+                  ? const Color(0xFF1E293B)
+                  : Colors.white.withOpacity(palette.isDark ? 0.20 : 0.40),
               width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.35),
+                color: Colors.black.withOpacity(palette.isOled ? 0.60 : 0.35),
                 blurRadius: 20,
                 offset: const Offset(0, -4),
               ),
@@ -70,14 +73,13 @@ class SettingsSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Settings',
-                        style: TextStyle(
-                          fontFamily: 'sans-serif',
+                        style: AppTypography.display(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFFFFFFFF),
+                          color: const Color(0xFFFFFFFF),
                         ),
                       ),
                     ),
@@ -101,17 +103,22 @@ class SettingsSheet extends StatelessWidget {
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   children: [
-                    // 1. 3-Option Theme Segmented Bar ("Serene Sky", "Midnight", "Pure Black", height 48px, borderRadius 24px)
+                    // 1. 4-Option Theme Segmented Bar ("System", "Sky", "Midnight", "OLED", height 48px, borderRadius 24px)
                     _buildThemeSelector(themeController, controller, palette),
 
                     const SizedBox(height: 14),
 
-                    // 2. 56px Frosted Row with "Precision (.00)" and Switch
+                    // 2. Pure Black for Dark Mode toggle
+                    _buildOledToggle(themeController, controller, palette),
+
+                    const SizedBox(height: 14),
+
+                    // 3. 56px Frosted Row with "Precision (.00)" and Switch
                     _buildPrecisionSwitch(controller, palette),
 
                     const SizedBox(height: 14),
 
-                    // 3. Row of two 52px horizontal frosted pill buttons: "Export" & "Import"
+                    // 4. Row of two 52px horizontal frosted pill buttons: "Export" & "Import"
                     _buildDataManagementSection(context, controller, palette),
 
                     const SizedBox(height: 32),
@@ -131,30 +138,36 @@ class SettingsSheet extends StatelessWidget {
     SkyPalette palette,
   ) {
     final options = [
-      {'name': 'Serene Sky', 'type': SkyThemePalette.sereneSky, 'key': 'sereneSky'},
-      {'name': 'Midnight', 'type': SkyThemePalette.midnightSky, 'key': 'midnightSky'},
-      {'name': 'Pure Black', 'type': SkyThemePalette.oledBlack, 'key': 'oledBlack'},
+      {'name': 'System', 'mode': SkyThemeMode.system, 'key': 'system'},
+      {'name': 'Sky', 'mode': SkyThemeMode.sereneSky, 'key': 'sereneSky'},
+      {'name': 'Midnight', 'mode': SkyThemeMode.midnightSky, 'key': 'midnightSky'},
+      {'name': 'OLED', 'mode': SkyThemeMode.oledBlack, 'key': 'oledBlack'},
     ];
 
     return Container(
       height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(palette.isDark ? 0.08 : 0.15),
+        color: palette.isOled
+            ? const Color(0xFF090D14)
+            : Colors.white.withOpacity(palette.isDark ? 0.08 : 0.15),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withOpacity(palette.isDark ? 0.18 : 0.30),
+          color: palette.isOled
+              ? const Color(0xFF1E293B)
+              : Colors.white.withOpacity(palette.isDark ? 0.18 : 0.30),
           width: 1.0,
         ),
       ),
       child: Row(
         children: options.map((opt) {
-          final isSelected = themeController.palette == opt['type'];
+          final isSelected = themeController.mode == opt['mode'];
 
           return Expanded(
             child: GestureDetector(
               onTap: () {
-                themeController.setPalette(opt['type'] as SkyThemePalette);
+                final mode = opt['mode'] as SkyThemeMode;
+                themeController.setMode(mode);
                 appController.updateSettings(
                   appController.settings.copyWith(themeMode: opt['key'] as String),
                 );
@@ -180,8 +193,7 @@ class SettingsSheet extends StatelessWidget {
                   child: Text(
                     opt['name'] as String,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
+                    style: AppTypography.label(
                       fontSize: 13,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                       color: isSelected ? const Color(0xFF0F172A) : palette.secondaryText,
@@ -196,6 +208,55 @@ class SettingsSheet extends StatelessWidget {
     );
   }
 
+  Widget _buildOledToggle(
+    SkyThemeController themeController,
+    AppController controller,
+    SkyPalette palette,
+  ) {
+    final usePureBlack = controller.settings.usePureBlackForDark;
+
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: palette.isOled
+            ? const Color(0xFF090D14)
+            : Colors.white.withOpacity(palette.isDark ? 0.12 : 0.14),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: palette.isOled
+              ? const Color(0xFF1E293B)
+              : Colors.white.withOpacity(0.20),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Pure Black for Dark Mode',
+              style: AppTypography.label(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFFFFFFF),
+              ),
+            ),
+          ),
+          Switch.adaptive(
+            value: usePureBlack,
+            onChanged: (val) {
+              themeController.setUsePureBlackForDark(val);
+              controller.togglePureBlackForDark();
+            },
+            activeColor: const Color(0xFFFFFFFF),
+            activeTrackColor: const Color(0xFFFFB547),
+            inactiveThumbColor: Colors.white,
+            inactiveTrackColor: Colors.white.withOpacity(0.20),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPrecisionSwitch(AppController controller, SkyPalette palette) {
     final isPrecision = controller.settings.precisionShowCentiseconds;
 
@@ -203,20 +264,25 @@ class SettingsSheet extends StatelessWidget {
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
+        color: palette.isOled
+            ? const Color(0xFF090D14)
+            : Colors.white.withOpacity(palette.isDark ? 0.12 : 0.14),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.20)),
+        border: Border.all(
+          color: palette.isOled
+              ? const Color(0xFF1E293B)
+              : Colors.white.withOpacity(0.20),
+        ),
       ),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Text(
               'Precision (.00)',
-              style: TextStyle(
-                fontFamily: 'sans-serif',
-                fontSize: 16,
+              style: AppTypography.label(
+                fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFFFFFFFF),
+                color: const Color(0xFFFFFFFF),
               ),
             ),
           ),
@@ -247,21 +313,25 @@ class SettingsSheet extends StatelessWidget {
             child: Container(
               height: 52,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.14),
+                color: palette.isOled
+                    ? const Color(0xFF090D14)
+                    : Colors.white.withOpacity(palette.isDark ? 0.12 : 0.14),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.white.withOpacity(0.20)),
+                border: Border.all(
+                  color: palette.isOled
+                      ? const Color(0xFF1E293B)
+                      : Colors.white.withOpacity(0.20),
+                ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.upload_rounded, color: Colors.white, size: 18),
-                  SizedBox(width: 8),
+                  const Icon(Icons.upload_rounded, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
                   Text(
                     'Export',
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
+                    style: AppTypography.button(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
                   ),
@@ -294,21 +364,25 @@ class SettingsSheet extends StatelessWidget {
             child: Container(
               height: 52,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.14),
+                color: palette.isOled
+                    ? const Color(0xFF090D14)
+                    : Colors.white.withOpacity(palette.isDark ? 0.12 : 0.14),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: Colors.white.withOpacity(0.20)),
+                border: Border.all(
+                  color: palette.isOled
+                      ? const Color(0xFF1E293B)
+                      : Colors.white.withOpacity(0.20),
+                ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.download_rounded, color: Colors.white, size: 18),
-                  SizedBox(width: 8),
+                  const Icon(Icons.download_rounded, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
                   Text(
                     'Import',
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
+                    style: AppTypography.button(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
                   ),

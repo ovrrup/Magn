@@ -121,11 +121,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             : 'Plan a Session',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: 'sans-serif',
+                        style: AppTypography.button(
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF0F172A),
+                          color: const Color(0xFF0F172A),
                         ),
                       ),
                     ),
@@ -188,10 +186,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 6),
                     Text(
                       '${controller.currentStreak}',
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                      style: AppTypography.numeric(
+                        fontSize: 14,
                         color: palette.primaryText,
                       ),
                     ),
@@ -224,10 +220,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 6),
                     Text(
                       '${controller.walletTokenBalance}',
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                      style: AppTypography.numeric(
+                        fontSize: 14,
                         color: palette.primaryText,
                       ),
                     ),
@@ -340,12 +334,8 @@ class _HomeScreenState extends State<HomeScreen> {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontFamily: 'sans-serif',
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+            style: AppTypography.microLabel(
               color: palette.secondaryText,
-              letterSpacing: 0.8,
             ),
           ),
           const SizedBox(height: 2),
@@ -355,10 +345,8 @@ class _HomeScreenState extends State<HomeScreen> {
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontFamily: 'sans-serif',
+            style: AppTypography.display(
               fontSize: 26,
-              fontWeight: FontWeight.w700,
               color: palette.primaryText,
               height: 1.15,
             ),
@@ -380,8 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: 'sans-serif',
+              style: AppTypography.label(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 color: palette.secondaryText,
@@ -465,10 +452,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             child: Text(
                               'Session #$sessionNumber',
-                              style: TextStyle(
-                                fontFamily: 'sans-serif',
+                              style: AppTypography.microLabel(
                                 fontSize: 10,
-                                fontWeight: FontWeight.w700,
                                 color: palette.secondaryText,
                               ),
                             ),
@@ -580,11 +565,10 @@ class SessionDetailDialog extends StatelessWidget {
                   Expanded(
                     child: Text(
                       session.topicTitle,
-                      style: const TextStyle(
-                        fontFamily: 'sans-serif',
-                        fontSize: 24,
+                      style: AppTypography.display(
+                        fontSize: 22,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFFFFFFFF), // Cloud White
+                        color: const Color(0xFFFFFFFF),
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -622,11 +606,9 @@ class SessionDetailDialog extends StatelessWidget {
                           Text(
                             'Duration',
                             maxLines: 1,
-                            style: TextStyle(
-                              fontFamily: 'sans-serif',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                            style: AppTypography.microLabel(
                               color: palette.secondaryText,
+                              fontSize: 10,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -635,8 +617,7 @@ class SessionDetailDialog extends StatelessWidget {
                             alignment: Alignment.centerLeft,
                             child: Text(
                               '${session.plannedMinutes}m',
-                              style: const TextStyle(
-                                fontFamily: 'sans-serif',
+                              style: AppTypography.numeric(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
@@ -667,11 +648,9 @@ class SessionDetailDialog extends StatelessWidget {
                           Text(
                             'Window',
                             maxLines: 1,
-                            style: TextStyle(
-                              fontFamily: 'sans-serif',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                            style: AppTypography.microLabel(
                               color: palette.secondaryText,
+                              fontSize: 10,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -680,8 +659,7 @@ class SessionDetailDialog extends StatelessWidget {
                             alignment: Alignment.centerLeft,
                             child: Text(
                               windowString,
-                              style: const TextStyle(
-                                fontFamily: 'sans-serif',
+                              style: AppTypography.numeric(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
@@ -712,11 +690,9 @@ class SessionDetailDialog extends StatelessWidget {
                           Text(
                             'Reward',
                             maxLines: 1,
-                            style: TextStyle(
-                              fontFamily: 'sans-serif',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                            style: AppTypography.microLabel(
                               color: palette.secondaryText,
+                              fontSize: 10,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -728,8 +704,7 @@ class SessionDetailDialog extends StatelessWidget {
                               children: [
                                 Text(
                                   '+$tokens',
-                                  style: TextStyle(
-                                    fontFamily: 'sans-serif',
+                                  style: AppTypography.numeric(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
                                     color: palette.amberGold,
@@ -748,8 +723,7 @@ class SessionDetailDialog extends StatelessWidget {
                                   ),
                                   child: Text(
                                     multTag,
-                                    style: TextStyle(
-                                      fontFamily: 'sans-serif',
+                                    style: AppTypography.numeric(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
                                       color: mult >= 1.25 ? palette.mintAura : Colors.white,
@@ -785,13 +759,11 @@ class SessionDetailDialog extends StatelessWidget {
                     Navigator.of(context).pop();
                     onStartSession();
                   },
-                  child: const Text(
+                  child: Text(
                     'Start Now',
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
+                    style: AppTypography.button(
                       fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F172A),
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
                 ),
@@ -808,11 +780,9 @@ class SessionDetailDialog extends StatelessWidget {
                     },
                     child: Text(
                       'Delete',
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
+                      style: AppTypography.button(
                         fontSize: 13,
                         color: palette.deadlineAlertCoral,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),

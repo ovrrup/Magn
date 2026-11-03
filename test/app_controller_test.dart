@@ -243,6 +243,14 @@ void main() {
 
       expect(controller.calculateDynamicStreak(), 1);
     });
+
+    test('togglePureBlackForDark toggles boolean and notifies listeners', () {
+      expect(controller.settings.usePureBlackForDark, isFalse);
+      controller.togglePureBlackForDark();
+      expect(controller.settings.usePureBlackForDark, isTrue);
+      controller.togglePureBlackForDark();
+      expect(controller.settings.usePureBlackForDark, isFalse);
+    });
   });
 
   group('Backup and Restore Roundtrip Tests', () {
