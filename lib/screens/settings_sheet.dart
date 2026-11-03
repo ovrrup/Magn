@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../state/app_controller.dart';
 import '../theme/sky_theme.dart';
+import '../widgets/sky_glass_widgets.dart';
 
 /// Settings Sheet (Serene Sky Sanctuary).
 ///
@@ -17,6 +18,7 @@ class SettingsSheet extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      barrierColor: const Color(0xFF090D16).withOpacity(0.45),
       builder: (context) => const SettingsSheet(),
     );
   }
@@ -32,24 +34,9 @@ class SettingsSheet extends StatelessWidget {
       minChildSize: 0.35,
       maxChildSize: 0.90,
       builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: palette.modalBackground,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(
-              color: palette.isOled
-                  ? const Color(0xFF1E293B)
-                  : Colors.white.withOpacity(palette.isDark ? 0.20 : 0.40),
-              width: 1.0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(palette.isOled ? 0.60 : 0.35),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
+        return SkyGlassModal(
+          isBottomSheet: true,
+          padding: EdgeInsets.zero,
           child: Column(
             children: [
               const SizedBox(height: 12),
@@ -147,18 +134,7 @@ class SettingsSheet extends StatelessWidget {
     return Container(
       height: 48,
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: palette.isOled
-            ? const Color(0xFF090D14)
-            : Colors.white.withOpacity(palette.isDark ? 0.08 : 0.15),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: palette.isOled
-              ? const Color(0xFF1E293B)
-              : Colors.white.withOpacity(palette.isDark ? 0.18 : 0.30),
-          width: 1.0,
-        ),
-      ),
+      decoration: SkyGlassWell.decoration(palette, borderRadius: 24),
       child: Row(
         children: options.map((opt) {
           final isSelected = themeController.mode == opt['mode'];
@@ -218,17 +194,7 @@ class SettingsSheet extends StatelessWidget {
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: palette.isOled
-            ? const Color(0xFF090D14)
-            : Colors.white.withOpacity(palette.isDark ? 0.12 : 0.14),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: palette.isOled
-              ? const Color(0xFF1E293B)
-              : Colors.white.withOpacity(0.20),
-        ),
-      ),
+      decoration: SkyGlassWell.decoration(palette, borderRadius: 18),
       child: Row(
         children: [
           Expanded(
@@ -263,17 +229,7 @@ class SettingsSheet extends StatelessWidget {
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: palette.isOled
-            ? const Color(0xFF090D14)
-            : Colors.white.withOpacity(palette.isDark ? 0.12 : 0.14),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: palette.isOled
-              ? const Color(0xFF1E293B)
-              : Colors.white.withOpacity(0.20),
-        ),
-      ),
+      decoration: SkyGlassWell.decoration(palette, borderRadius: 18),
       child: Row(
         children: [
           Expanded(
@@ -312,17 +268,7 @@ class SettingsSheet extends StatelessWidget {
             onTap: () => controller.exportToFileAndShare(context),
             child: Container(
               height: 52,
-              decoration: BoxDecoration(
-                color: palette.isOled
-                    ? const Color(0xFF090D14)
-                    : Colors.white.withOpacity(palette.isDark ? 0.12 : 0.14),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: palette.isOled
-                      ? const Color(0xFF1E293B)
-                      : Colors.white.withOpacity(0.20),
-                ),
-              ),
+              decoration: SkyGlassWell.decoration(palette, borderRadius: 18),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -363,17 +309,7 @@ class SettingsSheet extends StatelessWidget {
             },
             child: Container(
               height: 52,
-              decoration: BoxDecoration(
-                color: palette.isOled
-                    ? const Color(0xFF090D14)
-                    : Colors.white.withOpacity(palette.isDark ? 0.12 : 0.14),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: palette.isOled
-                      ? const Color(0xFF1E293B)
-                      : Colors.white.withOpacity(0.20),
-                ),
-              ),
+              decoration: SkyGlassWell.decoration(palette, borderRadius: 18),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

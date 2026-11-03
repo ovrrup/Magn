@@ -395,85 +395,96 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Sessions are planned: newly added sessions stack UPWARD above existing ones (reverse: true)
     return Center(
-      child: SingleChildScrollView(
-        reverse: true,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(planned.length, (index) {
-            final session = planned[index];
-            final sessionNumber = planned.length - index;
+      child: ShaderMask(
+        shaderCallback: (Rect bounds) {
+          return const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.transparent, Colors.white],
+            stops: [0.0, 0.12],
+          ).createShader(bounds);
+        },
+        blendMode: BlendMode.dstIn,
+        child: SingleChildScrollView(
+          reverse: true,
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(top: 28, bottom: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(planned.length, (index) {
+              final session = planned[index];
+              final sessionNumber = planned.length - index;
 
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Pedestal Node
-                PedestalNode(
-                  session: session,
-                  badgeIcon: Icons.layers_rounded,
-                  onTap: () {
-                    SessionDetailDialog.show(
-                      context: context,
-                      session: session,
-                      onStartSession: () => _launchActiveFocus(controller, plannedSession: session),
-                      onDeleteSession: () => controller.deletePlannedSession(session.id),
-                    );
-                  },
-                ),
-
-                // Subtle 1px dashed horizontal divider line labeled with session number
-                if (index < planned.length - 1)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 44,
-                          height: 1,
-                          child: CustomPaint(
-                            painter: _DashedLinePainter(
-                              color: Colors.white.withOpacity(palette.isDark ? 0.20 : 0.35),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(palette.isDark ? 0.08 : 0.16),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(palette.isDark ? 0.18 : 0.28),
-                                width: 1.0,
-                              ),
-                            ),
-                            child: Text(
-                              'Session #$sessionNumber',
-                              style: AppTypography.microLabel(
-                                fontSize: 10,
-                                color: palette.secondaryText,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 44,
-                          height: 1,
-                          child: CustomPaint(
-                            painter: _DashedLinePainter(
-                              color: Colors.white.withOpacity(palette.isDark ? 0.20 : 0.35),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Pedestal Node
+                  PedestalNode(
+                    session: session,
+                    badgeIcon: Icons.layers_rounded,
+                    onTap: () {
+                      SessionDetailDialog.show(
+                        context: context,
+                        session: session,
+                        onStartSession: () => _launchActiveFocus(controller, plannedSession: session),
+                        onDeleteSession: () => controller.deletePlannedSession(session.id),
+                      );
+                    },
                   ),
-              ],
-            );
-          }),
+
+                  // Subtle 1px dashed horizontal divider line labeled with session number
+                  if (index < planned.length - 1)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 44,
+                            height: 1,
+                            child: CustomPaint(
+                              painter: _DashedLinePainter(
+                                color: Colors.white.withOpacity(palette.isDark ? 0.20 : 0.35),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.16),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.35),
+                                  width: 1.0,
+                                ),
+                              ),
+                              child: Text(
+                                'Session #$sessionNumber',
+                                style: AppTypography.microLabel(
+                                  fontSize: 10,
+                                  color: const Color(0xFFFFFFFF),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 44,
+                            height: 1,
+                            child: CustomPaint(
+                              painter: _DashedLinePainter(
+                                color: Colors.white.withOpacity(palette.isDark ? 0.20 : 0.35),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              );
+            }),
+          ),
         ),
       ),
     );
@@ -527,7 +538,7 @@ class SessionDetailDialog extends StatelessWidget {
   }) {
     return showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.55),
+      barrierColor: const Color(0xFF090D16).withOpacity(0.45),
       builder: (ctx) => SessionDetailDialog(
         session: session,
         onStartSession: onStartSession,
@@ -548,11 +559,9 @@ class SessionDetailDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-      child: SkyGlassCard(
-        padding: const EdgeInsets.all(22),
-        borderRadius: BorderRadius.circular(28),
-        backgroundColor: palette.isDark ? const Color(0xFF1E293B) : const Color(0xFF3888E6),
-        borderColor: Colors.white.withOpacity(0.35),
+      child: SkyGlassModal(
+        isBottomSheet: false,
+        padding: const EdgeInsets.all(24),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -594,11 +603,7 @@ class SessionDetailDialog extends StatelessWidget {
                     child: Container(
                       height: 62,
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: Colors.white.withOpacity(0.14),
-                        border: Border.all(color: Colors.white.withOpacity(0.28)),
-                      ),
+                      decoration: SkyGlassWell.decoration(palette, borderRadius: 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -636,11 +641,7 @@ class SessionDetailDialog extends StatelessWidget {
                     child: Container(
                       height: 62,
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: Colors.white.withOpacity(0.14),
-                        border: Border.all(color: Colors.white.withOpacity(0.28)),
-                      ),
+                      decoration: SkyGlassWell.decoration(palette, borderRadius: 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -678,11 +679,7 @@ class SessionDetailDialog extends StatelessWidget {
                     child: Container(
                       height: 62,
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: Colors.white.withOpacity(0.14),
-                        border: Border.all(color: Colors.white.withOpacity(0.28)),
-                      ),
+                      decoration: SkyGlassWell.decoration(palette, borderRadius: 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,

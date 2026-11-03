@@ -203,18 +203,18 @@ class SkyPalette {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        Color(0xFF3888E6), // Cerulean Blue
-        Color(0xFF5CA3F5), // Airy Sky
-        Color(0xFF7CB8FA), // Soft Horizon Blue
+        Color(0xFF2B6CB0), // Deeper, richer matte slate-cerulean top
+        Color(0xFF3B82F6), // Cerulean mid
+        Color(0xFF60A5FA), // Soft luminous sky bottom
       ],
       stops: [0.0, 0.5, 1.0],
     ),
-    backgroundColor: Color(0xFF3888E6),
-    modalBackground: Color(0xFF285CB2),
-    glassSurfaceColor: Color(0x2EFFFFFF), // White at 0.18 opacity
-    glassBorderColor: Color(0x52FFFFFF), // White at 0.32 opacity
-    glassBorderWidth: 1.0,
-    glassRadius: 22.0,
+    backgroundColor: Color(0xFF2B6CB0),
+    modalBackground: Color(0xFF1E3A8A),
+    glassSurfaceColor: Color(0x3DFFFFFF), // White at 0.24 opacity
+    glassBorderColor: Color(0x6BFFFFFF), // White at 0.42 opacity
+    glassBorderWidth: 1.2,
+    glassRadius: 24.0,
     primaryText: Color(0xFFFFFFFF), // Cloud White
     secondaryText: Color(0xFFDBEAFE), // Soft Sky Blue
     amberGold: Color(0xFFFFB547), // Warm Amber Gold

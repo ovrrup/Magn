@@ -10,6 +10,7 @@ import '../models/app_models.dart';
 import '../services/flow_engine.dart';
 import '../services/token_calculator.dart';
 import '../theme/sky_theme.dart';
+import '../widgets/sky_glass_widgets.dart';
 
 /// Central reactive systems controller and state coordinator for Serene Sky Sanctuary.
 class AppController extends ChangeNotifier with WidgetsBindingObserver {
@@ -594,39 +595,53 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
       if (!context.mounted) return null;
       final mode = await showDialog<String>(
         context: context,
+        barrierColor: const Color(0xFF090D16).withOpacity(0.45),
         builder: (ctx) {
           final palette = SkyThemeScope.paletteOf(ctx);
-          return AlertDialog(
-            backgroundColor: palette.modalBackground,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Colors.white.withOpacity(0.35)),
-            ),
-            title: Text(
-              'Restore Archive',
-              style: AppTypography.display(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: palette.primaryText,
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: SkyGlassModal(
+              isBottomSheet: false,
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Restore Archive',
+                    style: AppTypography.display(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: palette.primaryText,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Do you want to merge imported records with existing data, or overwrite entirely?',
+                    style: AppTypography.label(
+                      fontSize: 14,
+                      color: palette.secondaryText,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop('merge'),
+                        child: Text('Merge Data', style: AppTypography.button(fontSize: 14, color: palette.mintAura)),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop('overwrite'),
+                        child: Text('Overwrite', style: AppTypography.button(fontSize: 14, color: palette.deadlineAlertCoral)),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            content: Text(
-              'Do you want to merge imported records with existing data, or overwrite entirely?',
-              style: AppTypography.label(
-                fontSize: 14,
-                color: palette.secondaryText,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop('merge'),
-                child: Text('Merge Data', style: AppTypography.button(fontSize: 14, color: palette.mintAura)),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop('overwrite'),
-                child: Text('Overwrite', style: AppTypography.button(fontSize: 14, color: palette.deadlineAlertCoral)),
-              ),
-            ],
           );
         },
       );

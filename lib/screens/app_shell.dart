@@ -1,5 +1,7 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/sky_theme.dart';
+import '../widgets/sky_glass_widgets.dart';
 import 'home_screen.dart';
 import 'plan_screen.dart';
 import 'stats_screen.dart';
@@ -48,13 +50,7 @@ class _AppShellState extends State<AppShell> {
 
     return Scaffold(
       backgroundColor: palette.backgroundColor,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          color: palette.backgroundColor,
-          gradient: palette.backgroundGradient,
-        ),
+      body: MatteGranularBackground(
         child: Stack(
           children: [
             // 1. Tab content stack (leaves exact clearance for bottom navigation dock)
@@ -80,49 +76,81 @@ class _AppShellState extends State<AppShell> {
   }
 
   Widget _buildBottomNav(BuildContext context, SkyPalette palette) {
-    return Container(
-      decoration: BoxDecoration(
-        color: palette.dockBg,
-        border: Border(
-          top: BorderSide(
-            color: palette.glassBorderColor,
-            width: 1.0,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(palette.isDark ? 0.35 : 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavDestination(
-                index: 0,
-                icon: Icons.home_rounded,
-                label: 'Home',
-                palette: palette,
+    final isOled = palette.isOled;
+
+    return RepaintBoundary(
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isOled ? Colors.black : null,
+              gradient: isOled
+                  ? null
+                  : (palette.isDark
+                      ? LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withOpacity(0.12),
+                            Colors.white.withOpacity(0.04),
+                          ],
+                        )
+                      : LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withOpacity(0.24),
+                            Colors.white.withOpacity(0.08),
+                          ],
+                        )),
+              border: Border(
+                top: BorderSide(
+                  color: isOled
+                      ? const Color(0xFF1E293B)
+                      : Colors.white.withOpacity(palette.isDark ? 0.22 : 0.42),
+                  width: 1.2,
+                ),
               ),
-              _buildNavDestination(
-                index: 1,
-                icon: Icons.layers_rounded,
-                label: 'Plan',
-                palette: palette,
+              boxShadow: isOled
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: const Color(0xFF0F172A).withOpacity(0.12),
+                        blurRadius: 20,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
+            ),
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                height: 64,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildNavDestination(
+                      index: 0,
+                      icon: Icons.home_rounded,
+                      label: 'Home',
+                      palette: palette,
+                    ),
+                    _buildNavDestination(
+                      index: 1,
+                      icon: Icons.layers_rounded,
+                      label: 'Plan',
+                      palette: palette,
+                    ),
+                    _buildNavDestination(
+                      index: 2,
+                      icon: Icons.bar_chart_rounded,
+                      label: 'Stats',
+                      palette: palette,
+                    ),
+                  ],
+                ),
               ),
-              _buildNavDestination(
-                index: 2,
-                icon: Icons.bar_chart_rounded,
-                label: 'Stats',
-                palette: palette,
-              ),
-            ],
+            ),
           ),
         ),
       ),

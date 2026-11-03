@@ -157,7 +157,7 @@ class PedestalNode extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: Colors.white.withOpacity(palette.isDark ? 0.12 : 0.22),
+                  color: Colors.white.withOpacity(0.16),
                   border: Border.all(
                     color: Colors.white.withOpacity(0.35),
                     width: 1.0,
@@ -168,7 +168,7 @@ class PedestalNode extends StatelessWidget {
                   style: AppTypography.numeric(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: palette.primaryText,
+                    color: const Color(0xFFFFFFFF),
                   ),
                 ),
               ),
@@ -178,9 +178,9 @@ class PedestalNode extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    color: palette.amberGold.withOpacity(palette.isDark ? 0.20 : 0.25),
+                    color: Colors.white.withOpacity(0.16),
                     border: Border.all(
-                      color: palette.amberGold.withOpacity(0.60),
+                      color: Colors.white.withOpacity(0.35),
                       width: 1.0,
                     ),
                   ),
@@ -189,7 +189,7 @@ class PedestalNode extends StatelessWidget {
                     style: AppTypography.numeric(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: palette.primaryText,
+                      color: const Color(0xFFFFFFFF),
                     ),
                   ),
                 ),

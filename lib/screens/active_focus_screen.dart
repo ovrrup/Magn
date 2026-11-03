@@ -47,13 +47,8 @@ class ActiveFocusScreen extends StatelessWidget {
         }
       },
       child: Scaffold(
-        body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            color: palette.backgroundColor,
-            gradient: palette.backgroundGradient,
-          ),
+        backgroundColor: palette.backgroundColor,
+        body: MatteGranularBackground(
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -197,49 +192,63 @@ class ActiveFocusScreen extends StatelessWidget {
   void _confirmAbandonSession(BuildContext context, AppController controller) {
     showDialog(
       context: context,
+      barrierColor: const Color(0xFF090D16).withOpacity(0.45),
       builder: (ctx) {
         final palette = SkyThemeScope.paletteOf(ctx);
-        return AlertDialog(
-          backgroundColor: palette.isDark ? const Color(0xFF1E293B) : const Color(0xFF3888E6),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withOpacity(0.35)),
-          ),
-          title: Text(
-            'Abandon Session?',
-            style: AppTypography.display(
-              fontSize: 18,
-              color: palette.primaryText,
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: SkyGlassModal(
+            isBottomSheet: false,
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Abandon Session?',
+                  style: AppTypography.display(
+                    fontSize: 18,
+                    color: palette.primaryText,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Cancelling will discard elapsed focus time and no token reward will be awarded.',
+                  style: AppTypography.label(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: palette.secondaryText,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: Text(
+                        'Keep Focusing',
+                        style: AppTypography.button(fontSize: 14, color: palette.primaryText),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(ctx).pop(); // close dialog
+                        controller.cancelFocusSession();
+                        Navigator.of(context).pop(); // close screen
+                      },
+                      child: Text(
+                        'Abandon',
+                        style: AppTypography.button(fontSize: 14, color: palette.deadlineAlertCoral),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          content: Text(
-            'Cancelling will discard elapsed focus time and no token reward will be awarded.',
-            style: AppTypography.label(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: palette.secondaryText,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
-                'Keep Focusing',
-                style: AppTypography.button(fontSize: 14, color: palette.primaryText),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop(); // close dialog
-                controller.cancelFocusSession();
-                Navigator.of(context).pop(); // close screen
-              },
-              child: Text(
-                'Abandon',
-                style: AppTypography.button(fontSize: 14, color: palette.deadlineAlertCoral),
-              ),
-            ),
-          ],
         );
       },
     );

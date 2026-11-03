@@ -513,18 +513,15 @@ class _PlanScreenState extends State<PlanScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      barrierColor: const Color(0xFF090D16).withOpacity(0.45),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-              child: Container(
+              child: SkyGlassModal(
+                isBottomSheet: true,
                 padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: palette.modalBackground,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                  border: Border.all(color: Colors.white.withOpacity(0.35)),
-                ),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -567,8 +564,9 @@ class _PlanScreenState extends State<PlanScreen> {
                       const SizedBox(height: 18),
 
                       // Unified Frosted Input Group: TextField
-                      SizedBox(
+                      Container(
                         height: 54,
+                        decoration: SkyGlassWell.decoration(palette, borderRadius: 18),
                         child: TextField(
                           controller: topicController,
                           style: AppTypography.label(
@@ -581,13 +579,9 @@ class _PlanScreenState extends State<PlanScreen> {
                               fontSize: 15,
                               color: Colors.white.withOpacity(0.60),
                             ),
-                            filled: true,
-                            fillColor: Colors.white.withOpacity(0.14),
+                            filled: false,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: BorderSide.none,
-                            ),
+                            border: InputBorder.none,
                           ),
                         ),
                       ),
@@ -605,12 +599,12 @@ class _PlanScreenState extends State<PlanScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                   margin: const EdgeInsets.only(right: 8),
-                                  decoration: BoxDecoration(
-                                    color: selectedGoalId == null
-                                        ? const Color(0xFFFFFFFF)
-                                        : Colors.white.withOpacity(0.14),
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
+                                  decoration: selectedGoalId == null
+                                      ? BoxDecoration(
+                                          color: const Color(0xFFFFFFFF),
+                                          borderRadius: BorderRadius.circular(14),
+                                        )
+                                      : SkyGlassWell.decoration(palette, borderRadius: 14),
                                   child: Text(
                                     'No goal',
                                     style: AppTypography.label(
@@ -637,12 +631,12 @@ class _PlanScreenState extends State<PlanScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                     margin: const EdgeInsets.only(right: 8),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? const Color(0xFFFFFFFF)
-                                          : Colors.white.withOpacity(0.14),
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
+                                    decoration: isSelected
+                                        ? BoxDecoration(
+                                            color: const Color(0xFFFFFFFF),
+                                            borderRadius: BorderRadius.circular(14),
+                                          )
+                                        : SkyGlassWell.decoration(palette, borderRadius: 14),
                                     child: Text(
                                       g.title,
                                       style: AppTypography.label(
@@ -675,12 +669,12 @@ class _PlanScreenState extends State<PlanScreen> {
                                 onTap: () => setModalState(() => duration = d),
                                 child: Container(
                                   height: 44,
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? const Color(0xFFFFFFFF)
-                                        : Colors.white.withOpacity(0.14),
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
+                                  decoration: isSelected
+                                      ? BoxDecoration(
+                                          color: const Color(0xFFFFFFFF),
+                                          borderRadius: BorderRadius.circular(14),
+                                        )
+                                      : SkyGlassWell.decoration(palette, borderRadius: 14),
                                   alignment: Alignment.center,
                                   child: FittedBox(
                                     fit: BoxFit.scaleDown,
@@ -707,11 +701,7 @@ class _PlanScreenState extends State<PlanScreen> {
                       // Preferred Time Window: Unified Frosted Card (borderRadius 18px, padding 14px)
                       Container(
                         padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.14),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: Colors.white.withOpacity(0.20)),
-                        ),
+                        decoration: SkyGlassWell.decoration(palette, borderRadius: 18),
                         child: Column(
                           children: [
                             Row(
@@ -748,10 +738,7 @@ class _PlanScreenState extends State<PlanScreen> {
                                       },
                                       child: Container(
                                         height: 42,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
+                                        decoration: SkyGlassWell.decoration(palette, borderRadius: 12),
                                         alignment: Alignment.center,
                                         child: FittedBox(
                                           fit: BoxFit.scaleDown,
@@ -783,10 +770,7 @@ class _PlanScreenState extends State<PlanScreen> {
                                       },
                                       child: Container(
                                         height: 42,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
+                                        decoration: SkyGlassWell.decoration(palette, borderRadius: 12),
                                         alignment: Alignment.center,
                                         child: FittedBox(
                                           fit: BoxFit.scaleDown,
@@ -855,13 +839,15 @@ class _PlanScreenState extends State<PlanScreen> {
                           ),
                         ),
                       ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
               ),
             );
+          },
+        );
+      },
+    );
           },
         );
       },
@@ -878,18 +864,15 @@ class _PlanScreenState extends State<PlanScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      barrierColor: const Color(0xFF090D16).withOpacity(0.45),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-              child: Container(
+              child: SkyGlassModal(
+                isBottomSheet: true,
                 padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: palette.modalBackground,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                  border: Border.all(color: Colors.white.withOpacity(0.35)),
-                ),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -932,8 +915,9 @@ class _PlanScreenState extends State<PlanScreen> {
                       const SizedBox(height: 18),
 
                       // Clean Frosted TextField (height 54px, borderRadius 18px, hintText "Goal title...")
-                      SizedBox(
+                      Container(
                         height: 54,
+                        decoration: SkyGlassWell.decoration(palette, borderRadius: 18),
                         child: TextField(
                           controller: titleController,
                           style: AppTypography.label(
@@ -946,13 +930,9 @@ class _PlanScreenState extends State<PlanScreen> {
                               fontSize: 15,
                               color: Colors.white.withOpacity(0.60),
                             ),
-                            filled: true,
-                            fillColor: Colors.white.withOpacity(0.14),
+                            filled: false,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: BorderSide.none,
-                            ),
+                            border: InputBorder.none,
                           ),
                         ),
                       ),
@@ -963,11 +943,7 @@ class _PlanScreenState extends State<PlanScreen> {
                       Container(
                         height: 52,
                         padding: const EdgeInsets.symmetric(horizontal: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.14),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: Colors.white.withOpacity(0.20)),
-                        ),
+                        decoration: SkyGlassWell.decoration(palette, borderRadius: 18),
                         child: Row(
                           children: [
                             const Icon(Icons.event_rounded, size: 18, color: Colors.white),
@@ -997,12 +973,12 @@ class _PlanScreenState extends State<PlanScreen> {
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: selectedDeadline != null
-                                      ? Colors.white.withOpacity(0.25)
-                                      : Colors.white.withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                                decoration: selectedDeadline != null
+                                    ? BoxDecoration(
+                                        color: Colors.white.withOpacity(0.25),
+                                        borderRadius: BorderRadius.circular(12),
+                                      )
+                                    : SkyGlassWell.decoration(palette, borderRadius: 12),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -1077,6 +1053,10 @@ class _PlanScreenState extends State<PlanScreen> {
                 ),
               ),
             );
+          },
+        );
+      },
+    );
           },
         );
       },
