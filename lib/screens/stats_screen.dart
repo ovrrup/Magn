@@ -347,7 +347,8 @@ class StatsScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-            final dateStr = '${s.endTime.month}/${s.endTime.day} • ${s.endTime.hour.toString().padLeft(2, '0')}:${s.endTime.minute.toString().padLeft(2, '0')}';
+        ...sessions.map((s) {
+          final dateStr = '${s.endTime.month}/${s.endTime.day} • ${s.endTime.hour.toString().padLeft(2, '0')}:${s.endTime.minute.toString().padLeft(2, '0')}';
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 8.0),

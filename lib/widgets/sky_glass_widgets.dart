@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../models/app_models.dart';
 import '../theme/sky_theme.dart';
 
 /// Reusable frosted glassmorphic card for Serene Sky Sanctuary.
