@@ -244,11 +244,11 @@ void main() {
       expect(controller.calculateDynamicStreak(), 1);
     });
 
-    test('togglePureBlackForDark toggles boolean and notifies listeners', () {
+    test('togglePureBlackForDark toggles boolean and notifies listeners', () async {
       expect(controller.settings.usePureBlackForDark, isFalse);
-      controller.togglePureBlackForDark();
+      await controller.togglePureBlackForDark();
       expect(controller.settings.usePureBlackForDark, isTrue);
-      controller.togglePureBlackForDark();
+      await controller.togglePureBlackForDark();
       expect(controller.settings.usePureBlackForDark, isFalse);
     });
   });
