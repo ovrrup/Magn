@@ -90,7 +90,7 @@ void main() {
     await tester.tap(find.text('Plan'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Plan & Horizons'), findsOneWidget);
+    expect(find.text('Plan & Horizons'), findsNothing);
     expect(find.text('Sessions'), findsOneWidget);
     expect(find.text('Goals'), findsOneWidget);
     expect(find.text('+ Plan Session'), findsOneWidget);
@@ -208,18 +208,88 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Settings Sheet contents
-    expect(find.text('Sanctuary Calibration & Settings'), findsOneWidget);
-    expect(find.textContaining('Timer Precision'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Sanctuary Calibration & Settings'), findsNothing);
+    expect(find.text('Precision (.00)'), findsOneWidget);
     expect(find.text('Serene Sky'), findsOneWidget);
-    expect(find.text('Midnight Dark'), findsOneWidget);
+    expect(find.text('Midnight'), findsOneWidget);
     expect(find.text('Pure Black'), findsOneWidget);
-    expect(find.text('Export Backup'), findsOneWidget);
-    expect(find.text('Restore Archive'), findsOneWidget);
+    expect(find.text('Export'), findsOneWidget);
+    expect(find.text('Import'), findsOneWidget);
 
     // Toggle theme palette
-    await tester.tap(find.text('Midnight Dark'));
+    await tester.tap(find.text('Midnight'));
     await tester.pumpAndSettle();
     expect(themeController.palette, SkyThemePalette.midnightSky);
+  });
+
+  testWidgets('Plan Session and Goal sheets open with decluttered inputs and save correctly',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.7;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final controller = AppController();
+    final themeController = SkyThemeController();
+
+    await tester.pumpWidget(
+      SereneSkyApp(
+        controller: controller,
+        themeController: themeController,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 1. Switch to Plan tab
+    await tester.tap(find.text('Plan'));
+    await tester.pumpAndSettle();
+
+    // 2. Open Plan Session Sheet
+    await tester.tap(find.text('+ Plan Session'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('New Session'), findsOneWidget);
+    expect(find.text('TOPIC / FOCUS INTENTION'), findsNothing);
+    expect(find.text('PLANNED DURATION (MINUTES)'), findsNothing);
+    expect(find.text('PREFERRED TIME WINDOW'), findsNothing);
+    expect(find.text('Save Session'), findsOneWidget);
+
+    // Enter topic and save
+    await tester.enterText(find.byType(TextField).first, 'Quantum Refactor');
+    await tester.tap(find.text('45m'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Save Session'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('New Session'), findsNothing);
+    expect(controller.plannedSessions.length, 1);
+    expect(controller.plannedSessions.first.topic, 'Quantum Refactor');
+    expect(controller.plannedSessions.first.plannedDurationMinutes, 45);
+
+    // 3. Open New Goal Sheet
+    await tester.tap(find.text('+ New Goal'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('New Goal'), findsOneWidget);
+    expect(find.text('GOAL TITLE'), findsNothing);
+    expect(find.text('TARGET DEADLINE (OPTIONAL)'), findsNothing);
+    expect(find.text('Target Date'), findsOneWidget);
+    expect(find.text('Save Goal'), findsOneWidget);
+
+    // Enter goal title and save
+    await tester.enterText(find.byType(TextField).first, 'Finish Engine V2');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Save Goal'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('New Goal'), findsNothing);
+    expect(controller.goals.length, 1);
+    expect(controller.goals.first.title, 'Finish Engine V2');
   });
 
   testWidgets('Active focus session executes with stopwatch and awards tokens on completion',

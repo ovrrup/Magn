@@ -51,12 +51,12 @@ class _PlanScreenState extends State<PlanScreen> {
       bottom: false,
       child: Column(
         children: [
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
 
-          // 1. Top Header & Segmented Glass Toggle
-          _buildHeaderAndToggle(palette),
+          // 1. Frosted 2-Pill Segmented Toggle
+          _buildSegmentedToggle(palette),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
           // 2. Main Content (Approaching Deadline + Partitioned Normal List)
           Expanded(
@@ -65,62 +65,45 @@ class _PlanScreenState extends State<PlanScreen> {
                 : _buildGoalsView(controller, palette, now),
           ),
 
-          // 3. Docked Dual Half-Size Pill Buttons (52px height, 12px gap)
+          // 3. Docked Dual Half-Size Pill Buttons (54px height, 12px gap)
           _buildBottomActionButtons(context, controller, palette),
         ],
       ),
     );
   }
 
-  Widget _buildHeaderAndToggle(SkyPalette palette) {
+  Widget _buildSegmentedToggle(SkyPalette palette) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Plan & Horizons',
-            style: TextStyle(
-              fontFamily: 'sans-serif',
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: palette.primaryText,
-              letterSpacing: -0.2,
-            ),
+      child: Container(
+        height: 48,
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(palette.isDark ? 0.08 : 0.15),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.white.withOpacity(palette.isDark ? 0.18 : 0.30),
+            width: 1.0,
           ),
-          const SizedBox(height: 10),
-
-          // Segmented Glass Toggle: [Sessions] vs [Goals]
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(palette.isDark ? 0.08 : 0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withOpacity(palette.isDark ? 0.18 : 0.30),
-                width: 1.0,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildSegmentButton(
+                label: 'Sessions',
+                index: 0,
+                palette: palette,
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildSegmentButton(
-                    label: 'Sessions',
-                    index: 0,
-                    palette: palette,
-                  ),
-                ),
-                Expanded(
-                  child: _buildSegmentButton(
-                    label: 'Goals',
-                    index: 1,
-                    palette: palette,
-                  ),
-                ),
-              ],
+            Expanded(
+              child: _buildSegmentButton(
+                label: 'Goals',
+                index: 1,
+                palette: palette,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -140,15 +123,9 @@ class _PlanScreenState extends State<PlanScreen> {
       },
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.white.withOpacity(palette.isDark ? 0.28 : 0.35)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          border: isSelected
-              ? Border.all(color: Colors.white.withOpacity(0.50), width: 1.0)
-              : null,
+          color: isSelected ? const Color(0xFFFFFFFF) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
           boxShadow: isSelected
               ? [
                   BoxShadow(
@@ -159,15 +136,16 @@ class _PlanScreenState extends State<PlanScreen> {
                 ]
               : null,
         ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'sans-serif',
-              fontSize: 13,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? palette.primaryText : palette.secondaryText,
-            ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'sans-serif',
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected
+                ? const Color(0xFF0F172A)
+                : palette.secondaryText,
           ),
         ),
       ),
@@ -184,33 +162,7 @@ class _PlanScreenState extends State<PlanScreen> {
     final normal = uncompleted.where((s) => !s.isApproachingDeadline(now)).toList();
 
     if (uncompleted.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.layers_clear_rounded, color: palette.secondaryText, size: 40),
-              const SizedBox(height: 12),
-              Text(
-                'No Planned Sessions',
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: palette.primaryText,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Tap "+ Plan Session" below to anchor your upcoming focus intervals.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'sans-serif', fontSize: 13, color: palette.secondaryText),
-              ),
-            ],
-          ),
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
     return ListView(
@@ -342,33 +294,7 @@ class _PlanScreenState extends State<PlanScreen> {
     final normal = uncompleted.where((g) => !g.isApproachingDeadline(now)).toList();
 
     if (uncompleted.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.flag_outlined, color: palette.secondaryText, size: 40),
-              const SizedBox(height: 12),
-              Text(
-                'No Active Goals',
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: palette.primaryText,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Tap "+ New Goal" below to define target objectives and milestones.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'sans-serif', fontSize: 13, color: palette.secondaryText),
-              ),
-            ],
-          ),
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
     return ListView(
@@ -606,10 +532,10 @@ class _PlanScreenState extends State<PlanScreen> {
             return Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
               child: Container(
-                padding: const EdgeInsets.all(22),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: palette.isDark ? const Color(0xFF1E293B) : const Color(0xFF3888E6),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                   border: Border.all(color: Colors.white.withOpacity(0.35)),
                 ),
                 child: SingleChildScrollView(
@@ -617,177 +543,330 @@ class _PlanScreenState extends State<PlanScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Centered 36x4px top drag handle pill
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.35),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Header Row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Plan Focus Session',
+                          const Text(
+                            'New Session',
                             style: TextStyle(
                               fontFamily: 'sans-serif',
-                              fontSize: 18,
+                              fontSize: 22,
                               fontWeight: FontWeight.w700,
-                              color: palette.primaryText,
+                              color: Color(0xFFFFFFFF),
                             ),
                           ),
                           IconButton(
                             icon: const Icon(Icons.close_rounded, color: Colors.white),
                             onPressed: () => Navigator.of(ctx).pop(),
+                            splashRadius: 20,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 18),
 
-                      // Topic Input
-                      Text('TOPIC / FOCUS INTENTION', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: palette.secondaryText)),
-                      const SizedBox(height: 4),
-                      TextField(
-                        controller: topicController,
-                        style: TextStyle(fontFamily: 'sans-serif', fontSize: 14, color: palette.primaryText),
-                        decoration: InputDecoration(
-                          hintText: 'e.g. Architecture Blueprint Refactor',
-                          hintStyle: TextStyle(color: palette.secondaryText.withOpacity(0.6)),
-                          filled: true,
-                          fillColor: Colors.white.withOpacity(0.12),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                      // Unified Frosted Input Group: TextField
+                      SizedBox(
+                        height: 54,
+                        child: TextField(
+                          controller: topicController,
+                          style: const TextStyle(
+                            fontFamily: 'sans-serif',
+                            fontSize: 15,
+                            color: Colors.white,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Focus topic...',
+                            hintStyle: TextStyle(
+                              fontFamily: 'sans-serif',
+                              fontSize: 15,
+                              color: Colors.white.withOpacity(0.60),
+                            ),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.14),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
                         ),
                       ),
 
-                      // Linked Goal Dropdown (if goals exist)
+                      // Selectable Goal Pill Chips (only if goals exist)
                       if (controller.goals.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        Text('LINK TO EXISTING GOAL (OPTIONAL)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: palette.secondaryText)),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: DropdownButton<String?>(
-                            value: selectedGoalId,
-                            isExpanded: true,
-                            underline: const SizedBox(),
-                            dropdownColor: palette.isDark ? const Color(0xFF1E293B) : const Color(0xFF3888E6),
-                            style: TextStyle(fontFamily: 'sans-serif', color: palette.primaryText),
-                            items: [
-                              const DropdownMenuItem(value: null, child: Text('No linked goal')),
-                              ...controller.goals.map((g) => DropdownMenuItem(value: g.id, child: Text(g.title))),
+                        const SizedBox(height: 10),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () => setModalState(() => selectedGoalId = null),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  margin: const EdgeInsets.only(right: 8),
+                                  decoration: BoxDecoration(
+                                    color: selectedGoalId == null
+                                        ? const Color(0xFFFFFFFF)
+                                        : Colors.white.withOpacity(0.14),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: Text(
+                                    'No goal',
+                                    style: TextStyle(
+                                      fontFamily: 'sans-serif',
+                                      fontSize: 13,
+                                      fontWeight: selectedGoalId == null ? FontWeight.w700 : FontWeight.w500,
+                                      color: selectedGoalId == null
+                                          ? const Color(0xFF0F172A)
+                                          : Colors.white.withOpacity(0.90),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              ...controller.goals.map((g) {
+                                final isSelected = selectedGoalId == g.id;
+                                return GestureDetector(
+                                  onTap: () {
+                                    setModalState(() {
+                                      selectedGoalId = g.id;
+                                      if (topicController.text.trim().isEmpty) {
+                                        topicController.text = g.title;
+                                      }
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                    margin: const EdgeInsets.only(right: 8),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? const Color(0xFFFFFFFF)
+                                          : Colors.white.withOpacity(0.14),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Text(
+                                      g.title,
+                                      style: TextStyle(
+                                        fontFamily: 'sans-serif',
+                                        fontSize: 13,
+                                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                        color: isSelected
+                                            ? const Color(0xFF0F172A)
+                                            : Colors.white.withOpacity(0.90),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
                             ],
-                            onChanged: (val) {
-                              setModalState(() {
-                                selectedGoalId = val;
-                                if (val != null && topicController.text.isEmpty) {
-                                  final g = controller.goals.firstWhere((x) => x.id == val);
-                                  topicController.text = g.title;
-                                }
-                              });
-                            },
                           ),
                         ),
                       ],
 
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 18),
 
-                      // Duration Selector
-                      Text('PLANNED DURATION (MINUTES)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: palette.secondaryText)),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 8,
+                      // Duration Selector (5 equal-width pills, height 44px, borderRadius 14px, 8px gap)
+                      Row(
                         children: [15, 25, 45, 60, 90].map((d) {
                           final isSelected = duration == d;
-                          return ChoiceChip(
-                            label: Text('${d}m'),
-                            selected: isSelected,
-                            onSelected: (_) => setModalState(() => duration = d),
-                            selectedColor: palette.amberGold,
-                            labelStyle: TextStyle(
-                              color: isSelected ? Colors.black : palette.primaryText,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          final isLast = d == 90;
+                          return Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(right: isLast ? 0 : 8),
+                              child: GestureDetector(
+                                onTap: () => setModalState(() => duration = d),
+                                child: Container(
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? const Color(0xFFFFFFFF)
+                                        : Colors.white.withOpacity(0.14),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    '${d}m',
+                                    style: TextStyle(
+                                      fontFamily: 'sans-serif',
+                                      fontSize: 14,
+                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                      color: isSelected
+                                          ? const Color(0xFF0F172A)
+                                          : Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                            backgroundColor: Colors.white.withOpacity(0.12),
                           );
                         }).toList(),
                       ),
 
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 18),
 
-                      // Preferred Window Picker
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('PREFERRED TIME WINDOW', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: palette.secondaryText)),
-                          Switch(
-                            value: hasWindow,
-                            onChanged: (val) => setModalState(() => hasWindow = val),
-                            activeColor: palette.amberGold,
-                          ),
-                        ],
-                      ),
-                      if (hasWindow) ...[
-                        Row(
+                      // Preferred Time Window: Unified Frosted Card (borderRadius 18px, padding 14px)
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.14),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: Colors.white.withOpacity(0.20)),
+                        ),
+                        child: Column(
                           children: [
-                            Expanded(
-                              child: TextButton.icon(
-                                icon: const Icon(Icons.schedule_rounded, size: 16),
-                                label: Text(startTime.format(ctx)),
-                                style: TextButton.styleFrom(
-                                  backgroundColor: Colors.white.withOpacity(0.12),
-                                  foregroundColor: palette.primaryText,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Time Window',
+                                  style: TextStyle(
+                                    fontFamily: 'sans-serif',
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                                onPressed: () async {
-                                  final picked = await showTimePicker(context: ctx, initialTime: startTime);
-                                  if (picked != null) setModalState(() => startTime = picked);
-                                },
-                              ),
-                            ),
-                            const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('to', style: TextStyle(color: Colors.white))),
-                            Expanded(
-                              child: TextButton.icon(
-                                icon: const Icon(Icons.schedule_rounded, size: 16),
-                                label: Text(endTime.format(ctx)),
-                                style: TextButton.styleFrom(
-                                  backgroundColor: Colors.white.withOpacity(0.12),
-                                  foregroundColor: palette.primaryText,
+                                Switch.adaptive(
+                                  value: hasWindow,
+                                  onChanged: (val) => setModalState(() => hasWindow = val),
+                                  activeColor: const Color(0xFFFFFFFF),
+                                  activeTrackColor: const Color(0xFFFFB547),
+                                  inactiveThumbColor: Colors.white,
+                                  inactiveTrackColor: Colors.white.withOpacity(0.20),
                                 ),
-                                onPressed: () async {
-                                  final picked = await showTimePicker(context: ctx, initialTime: endTime);
-                                  if (picked != null) setModalState(() => endTime = picked);
-                                },
-                              ),
+                              ],
                             ),
+                            if (hasWindow) ...[
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        final picked = await showTimePicker(context: ctx, initialTime: startTime);
+                                        if (picked != null) setModalState(() => startTime = picked);
+                                      },
+                                      child: Container(
+                                        height: 42,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.15),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          startTime.format(ctx),
+                                          style: const TextStyle(
+                                            fontFamily: 'sans-serif',
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 10),
+                                    child: Icon(
+                                      Icons.arrow_forward_rounded,
+                                      size: 16,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        final picked = await showTimePicker(context: ctx, initialTime: endTime);
+                                        if (picked != null) setModalState(() => endTime = picked);
+                                      },
+                                      child: Container(
+                                        height: 42,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.15),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          endTime.format(ctx),
+                                          style: const TextStyle(
+                                            fontFamily: 'sans-serif',
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
-                      ],
+                      ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 22),
 
-                      // Save Button
-                      SkyPillButton(
-                        label: 'Save Planned Session',
-                        onPressed: () {
-                          final topic = topicController.text.trim();
-                          if (topic.isEmpty) {
-                            ScaffoldMessenger.of(ctx).showSnackBar(
-                              const SnackBar(content: Text('Please enter a session topic.')),
+                      // Full-width Cloud White Pill Button: "Save Session" (height 54px, deep navy bold text)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFFFFF),
+                            foregroundColor: const Color(0xFF0F172A),
+                            elevation: 0,
+                            shape: const StadiumBorder(),
+                          ),
+                          onPressed: () {
+                            final topic = topicController.text.trim();
+                            if (topic.isEmpty) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                const SnackBar(content: Text('Please enter a session topic.')),
+                              );
+                              return;
+                            }
+
+                            controller.addPlannedSession(
+                              topic: topic,
+                              plannedDurationMinutes: duration,
+                              preferredWindow: hasWindow
+                                  ? TimeWindow(
+                                      startHour: startTime.hour,
+                                      startMinute: startTime.minute,
+                                      endHour: endTime.hour,
+                                      endMinute: endTime.minute,
+                                    )
+                                  : null,
+                              linkedGoalId: selectedGoalId,
                             );
-                            return;
-                          }
-
-                          controller.addPlannedSession(
-                            topic: topic,
-                            plannedDurationMinutes: duration,
-                            preferredWindow: hasWindow
-                                ? TimeWindow(
-                                    startHour: startTime.hour,
-                                    startMinute: startTime.minute,
-                                    endHour: endTime.hour,
-                                    endMinute: endTime.minute,
-                                  )
-                                : null,
-                            linkedGoalId: selectedGoalId,
-                          );
-                          Navigator.of(ctx).pop();
-                        },
+                            Navigator.of(ctx).pop();
+                          },
+                          child: const Text(
+                            'Save Session',
+                            style: TextStyle(
+                              fontFamily: 'sans-serif',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -816,113 +895,202 @@ class _PlanScreenState extends State<PlanScreen> {
             return Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
               child: Container(
-                padding: const EdgeInsets.all(22),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: palette.isDark ? const Color(0xFF1E293B) : const Color(0xFF3888E6),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                   border: Border.all(color: Colors.white.withOpacity(0.35)),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Create Focus Goal',
-                          style: TextStyle(
-                            fontFamily: 'sans-serif',
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: palette.primaryText,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Centered 36x4px top drag handle pill
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.35),
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Colors.white),
-                          onPressed: () => Navigator.of(ctx).pop(),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Title
-                    Text('GOAL TITLE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: palette.secondaryText)),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: titleController,
-                      style: TextStyle(fontFamily: 'sans-serif', fontSize: 14, color: palette.primaryText),
-                      decoration: InputDecoration(
-                        hintText: 'e.g. Complete System Engine Specification',
-                        hintStyle: TextStyle(color: palette.secondaryText.withOpacity(0.6)),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.12),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                       ),
-                    ),
+                      const SizedBox(height: 16),
 
-                    const SizedBox(height: 14),
+                      // Header Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'New Goal',
+                            style: TextStyle(
+                              fontFamily: 'sans-serif',
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFFFFFFFF),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded, color: Colors.white),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            splashRadius: 20,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
 
-                    // Deadline Picker
-                    Text('TARGET DEADLINE (OPTIONAL)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: palette.secondaryText)),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextButton.icon(
-                            icon: const Icon(Icons.event_rounded, size: 18),
-                            label: Text(
-                              selectedDeadline != null
-                                  ? '${selectedDeadline!.year}-${selectedDeadline!.month.toString().padLeft(2, '0')}-${selectedDeadline!.day.toString().padLeft(2, '0')}'
-                                  : 'Select Deadline Date',
+                      // Clean Frosted TextField (height 54px, borderRadius 18px, hintText "Goal title...")
+                      SizedBox(
+                        height: 54,
+                        child: TextField(
+                          controller: titleController,
+                          style: const TextStyle(
+                            fontFamily: 'sans-serif',
+                            fontSize: 15,
+                            color: Colors.white,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Goal title...',
+                            hintStyle: TextStyle(
+                              fontFamily: 'sans-serif',
+                              fontSize: 15,
+                              color: Colors.white.withOpacity(0.60),
                             ),
-                            style: TextButton.styleFrom(
-                              backgroundColor: Colors.white.withOpacity(0.12),
-                              foregroundColor: palette.primaryText,
-                              alignment: Alignment.centerLeft,
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.14),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide: BorderSide.none,
                             ),
-                            onPressed: () async {
-                              final picked = await showDatePicker(
-                                context: ctx,
-                                initialDate: selectedDeadline ?? DateTime.now().add(const Duration(days: 3)),
-                                firstDate: DateTime.now().subtract(const Duration(days: 1)),
-                                lastDate: DateTime.now().add(const Duration(days: 365)),
-                              );
-                              if (picked != null) setModalState(() => selectedDeadline = picked);
-                            },
                           ),
                         ),
-                        if (selectedDeadline != null)
-                          IconButton(
-                            icon: const Icon(Icons.clear_rounded, color: Colors.white),
-                            onPressed: () => setModalState(() => selectedDeadline = null),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // 52px Frosted Row: Icons.event_rounded (size 18, white) and text "Target Date" on left, tappable pill on right
+                      Container(
+                        height: 52,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.14),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: Colors.white.withOpacity(0.20)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.event_rounded, size: 18, color: Colors.white),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Target Date',
+                                  style: TextStyle(
+                                    fontFamily: 'sans-serif',
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: ctx,
+                                  initialDate: selectedDeadline ?? DateTime.now().add(const Duration(days: 3)),
+                                  firstDate: DateTime.now().subtract(const Duration(days: 1)),
+                                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                                );
+                                if (picked != null) setModalState(() => selectedDeadline = picked);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: selectedDeadline != null
+                                      ? Colors.white.withOpacity(0.25)
+                                      : Colors.white.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      selectedDeadline != null
+                                          ? '${selectedDeadline!.year}-${selectedDeadline!.month.toString().padLeft(2, '0')}-${selectedDeadline!.day.toString().padLeft(2, '0')}'
+                                          : 'Optional',
+                                      style: TextStyle(
+                                        fontFamily: 'sans-serif',
+                                        fontSize: 13,
+                                        fontWeight: selectedDeadline != null ? FontWeight.w600 : FontWeight.w500,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    if (selectedDeadline != null) ...[
+                                      const SizedBox(width: 4),
+                                      GestureDetector(
+                                        onTap: () => setModalState(() => selectedDeadline = null),
+                                        child: const Icon(
+                                          Icons.close_rounded,
+                                          size: 14,
+                                          color: Colors.white70,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 22),
+
+                      // Bottom Cloud White Pill Button: "Save Goal" (height 54px)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFFFFF),
+                            foregroundColor: const Color(0xFF0F172A),
+                            elevation: 0,
+                            shape: const StadiumBorder(),
                           ),
-                      ],
-                    ),
+                          onPressed: () {
+                            final title = titleController.text.trim();
+                            if (title.isEmpty) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                const SnackBar(content: Text('Please enter a goal title.')),
+                              );
+                              return;
+                            }
 
-                    const SizedBox(height: 20),
-
-                    // Submit Button
-                    SkyPillButton(
-                      label: 'Create Goal',
-                      onPressed: () {
-                        final title = titleController.text.trim();
-                        if (title.isEmpty) {
-                          ScaffoldMessenger.of(ctx).showSnackBar(
-                            const SnackBar(content: Text('Please enter a goal title.')),
-                          );
-                          return;
-                        }
-
-                        controller.addGoal(
-                          title: title,
-                          deadlineDate: selectedDeadline,
-                        );
-                        Navigator.of(ctx).pop();
-                      },
-                    ),
-                  ],
+                            controller.addGoal(
+                              title: title,
+                              deadlineDate: selectedDeadline,
+                            );
+                            Navigator.of(ctx).pop();
+                          },
+                          child: const Text(
+                            'Save Goal',
+                            style: TextStyle(
+                              fontFamily: 'sans-serif',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

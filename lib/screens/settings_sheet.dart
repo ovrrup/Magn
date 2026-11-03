@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import '../state/app_controller.dart';
 import '../theme/sky_theme.dart';
-import '../widgets/sky_glass_widgets.dart';
 
-/// Settings & System Calibration Sheet (Serene Sky Sanctuary).
+/// Settings Sheet (Serene Sky Sanctuary).
 ///
 /// Features:
-/// - Precision Toggle: Shows/hides .00 centiseconds on the Active Focus Screen.
-///   (No separate toggle to hide main timer digits).
-/// - 3-Option Theme Palette Selector: Serene Sky, Midnight Sky, Pure Black OLED.
-/// - File-Based JSON Backup & Atomic Restore:
-///   * Validates schema version (serene_sky_backup_v2), fields, and data types.
-///   * Preserves existing data safely if import fails.
-///   * Dynamically recalculates streak against DateTime.now() in device local timezone.
+/// - 3-Option Theme Palette Selector: Serene Sky, Midnight, Pure Black.
+/// - Precision Toggle: Shows/hides .00 centiseconds on Active Focus.
+/// - File-Based JSON Backup & Atomic Restore: Export / Import.
 class SettingsSheet extends StatelessWidget {
   const SettingsSheet({super.key});
 
@@ -32,14 +27,14 @@ class SettingsSheet extends StatelessWidget {
     final controller = AppControllerScope.of(context);
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.82,
-      minChildSize: 0.45,
-      maxChildSize: 0.95,
+      initialChildSize: 0.55,
+      minChildSize: 0.35,
+      maxChildSize: 0.85,
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
             color: palette.isDark ? const Color(0xFF0F172A) : const Color(0xFF285CB2),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             border: Border.all(
               color: Colors.white.withOpacity(palette.isDark ? 0.20 : 0.40),
               width: 1.0,
@@ -54,74 +49,68 @@ class SettingsSheet extends StatelessWidget {
           ),
           child: Column(
             children: [
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
 
-              // Top Drag Handle
-              Container(
-                width: 38,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.40),
-                  borderRadius: BorderRadius.circular(2),
+              // Top Drag Handle (centered 36x4px, white at 0.35 opacity)
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.35),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // Title Bar
+              // Title Bar ("Settings" + X button, no divider line)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Text(
-                        'Sanctuary Calibration & Settings',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'sans-serif',
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: palette.primaryText,
-                        ),
+                    const Text(
+                      'Settings',
+                      style: TextStyle(
+                        fontFamily: 'sans-serif',
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFFFFFFF),
                       ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded, color: Colors.white),
                       onPressed: () => Navigator.of(context).pop(),
                       splashRadius: 20,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
                   ],
                 ),
               ),
 
-              const Divider(color: Colors.white24, height: 1),
+              const SizedBox(height: 20),
 
               // Content List
               Expanded(
                 child: ListView(
                   controller: scrollController,
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.all(18.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   children: [
-                    // Section 1: Appearance & Tri-Theme Palettes
-                    _buildSectionHeader('APPEARANCE & THEME PALETTES', palette),
-                    const SizedBox(height: 10),
+                    // 1. 3-Option Theme Segmented Bar ("Serene Sky", "Midnight", "Pure Black", height 48px, borderRadius 24px)
                     _buildThemeSelector(themeController, controller, palette),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 14),
 
-                    // Section 2: Timer Precision (Centiseconds Toggle)
-                    _buildSectionHeader('TIMER PRECISION & DISPLAY', palette),
-                    const SizedBox(height: 10),
+                    // 2. 56px Frosted Row with "Precision (.00)" and Switch
                     _buildPrecisionSwitch(controller, palette),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 14),
 
-                    // Section 3: File-Based JSON Backup & Atomic Restore
-                    _buildSectionHeader('DATA MANAGEMENT & ARCHIVE', palette),
-                    const SizedBox(height: 10),
+                    // 3. Row of two 52px horizontal frosted pill buttons: "Export" & "Import"
                     _buildDataManagementSection(context, controller, palette),
 
                     const SizedBox(height: 32),
@@ -135,19 +124,6 @@ class SettingsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, SkyPalette palette) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontFamily: 'sans-serif',
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-        color: palette.secondaryText,
-        letterSpacing: 0.8,
-      ),
-    );
-  }
-
   Widget _buildThemeSelector(
     SkyThemeController themeController,
     AppController appController,
@@ -155,13 +131,21 @@ class SettingsSheet extends StatelessWidget {
   ) {
     final options = [
       {'name': 'Serene Sky', 'type': SkyThemePalette.sereneSky, 'key': 'sereneSky'},
-      {'name': 'Midnight Dark', 'type': SkyThemePalette.midnightSky, 'key': 'midnightSky'},
+      {'name': 'Midnight', 'type': SkyThemePalette.midnightSky, 'key': 'midnightSky'},
       {'name': 'Pure Black', 'type': SkyThemePalette.oledBlack, 'key': 'oledBlack'},
     ];
 
-    return SkyGlassCard(
-      padding: const EdgeInsets.all(6),
-      borderRadius: BorderRadius.circular(20),
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(palette.isDark ? 0.08 : 0.15),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withOpacity(palette.isDark ? 0.18 : 0.30),
+          width: 1.0,
+        ),
+      ),
       child: Row(
         children: options.map((opt) {
           final isSelected = themeController.palette == opt['type'];
@@ -174,27 +158,30 @@ class SettingsSheet extends StatelessWidget {
                   appController.settings.copyWith(themeMode: opt['key'] as String),
                 );
               },
+              behavior: HitTestBehavior.opaque,
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? Colors.white.withOpacity(palette.isDark ? 0.28 : 0.38)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
-                  border: isSelected
-                      ? Border.all(color: Colors.white.withOpacity(0.50), width: 1.0)
+                  color: isSelected ? const Color(0xFFFFFFFF) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.12),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ]
                       : null,
                 ),
-                child: Center(
-                  child: Text(
-                    opt['name'] as String,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected ? palette.primaryText : palette.secondaryText,
-                    ),
+                alignment: Alignment.center,
+                child: Text(
+                  opt['name'] as String,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'sans-serif',
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected ? const Color(0xFF0F172A) : palette.secondaryText,
                   ),
                 ),
               ),
@@ -208,41 +195,31 @@ class SettingsSheet extends StatelessWidget {
   Widget _buildPrecisionSwitch(AppController controller, SkyPalette palette) {
     final isPrecision = controller.settings.precisionShowCentiseconds;
 
-    return SkyGlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      borderRadius: BorderRadius.circular(20),
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withOpacity(0.20)),
+      ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Timer Precision (.00 centiseconds)',
-                  style: TextStyle(
-                    fontFamily: 'sans-serif',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: palette.primaryText,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Shows sub-second high-cadence digits in Active Focus.',
-                  style: TextStyle(
-                    fontFamily: 'sans-serif',
-                    fontSize: 11,
-                    color: palette.secondaryText,
-                  ),
-                ),
-              ],
+          const Text(
+            'Precision (.00)',
+            style: TextStyle(
+              fontFamily: 'sans-serif',
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFFFFFFFF),
             ),
           ),
           Switch.adaptive(
             value: isPrecision,
             onChanged: (val) => controller.togglePrecision(),
-            activeColor: palette.amberGold,
-            activeTrackColor: palette.amberGold.withOpacity(0.40),
+            activeColor: const Color(0xFFFFFFFF),
+            activeTrackColor: const Color(0xFFFFB547),
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: Colors.white.withOpacity(0.20),
           ),
@@ -258,42 +235,42 @@ class SettingsSheet extends StatelessWidget {
   ) {
     return Row(
       children: [
-        // Backup
+        // Export button
         Expanded(
-          child: SkyGlassCard(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
-            borderRadius: BorderRadius.circular(20),
+          child: GestureDetector(
             onTap: () => controller.exportToFileAndShare(context),
-            child: Column(
-              children: [
-                Icon(Icons.upload_file_rounded, color: palette.amberGold, size: 24),
-                const SizedBox(height: 6),
-                Text(
-                  'Export Backup',
-                  style: TextStyle(
-                    fontFamily: 'sans-serif',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: palette.primaryText,
+            child: Container(
+              height: 52,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.white.withOpacity(0.20)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.upload_rounded, color: Colors.white, size: 18),
+                  SizedBox(width: 8),
+                  Text(
+                    'Export',
+                    style: TextStyle(
+                      fontFamily: 'sans-serif',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'JSON Archive',
-                  style: TextStyle(fontFamily: 'sans-serif', fontSize: 10, color: palette.secondaryText),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
 
         const SizedBox(width: 12),
 
-        // Restore
+        // Import button
         Expanded(
-          child: SkyGlassCard(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
-            borderRadius: BorderRadius.circular(20),
+          child: GestureDetector(
             onTap: () async {
               final success = await controller.pickAndRestoreFile(context);
               if (context.mounted && success != null) {
@@ -309,25 +286,29 @@ class SettingsSheet extends StatelessWidget {
                 );
               }
             },
-            child: Column(
-              children: [
-                Icon(Icons.restore_page_rounded, color: palette.mintAura, size: 24),
-                const SizedBox(height: 6),
-                Text(
-                  'Restore Archive',
-                  style: TextStyle(
-                    fontFamily: 'sans-serif',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: palette.primaryText,
+            child: Container(
+              height: 52,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.white.withOpacity(0.20)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.download_rounded, color: Colors.white, size: 18),
+                  SizedBox(width: 8),
+                  Text(
+                    'Import',
+                    style: TextStyle(
+                      fontFamily: 'sans-serif',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Atomic Verify',
-                  style: TextStyle(fontFamily: 'sans-serif', fontSize: 10, color: palette.secondaryText),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
