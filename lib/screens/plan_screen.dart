@@ -16,6 +16,24 @@ import '../widgets/sky_glass_widgets.dart';
 class PlanScreen extends StatefulWidget {
   const PlanScreen({super.key});
 
+  /// Displays the modal sheet to plan a new focus session.
+  static void showPlanSessionModal(
+    BuildContext context,
+    AppController controller,
+    SkyPalette palette,
+  ) {
+    _PlanScreenState.showPlanSessionModal(context, controller, palette);
+  }
+
+  /// Displays the modal sheet to create a new goal.
+  static void showNewGoalModal(
+    BuildContext context,
+    AppController controller,
+    SkyPalette palette,
+  ) {
+    _PlanScreenState.showNewGoalModal(context, controller, palette);
+  }
+
   @override
   State<PlanScreen> createState() => _PlanScreenState();
 }

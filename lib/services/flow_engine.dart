@@ -81,49 +81,6 @@ class FlowEngine {
     );
   }
 
-  /// Calculates Flow Readiness % based on session recency, regularity, and completion.
-  static double _calculateReadiness({
-    required List<CompletedSession> validSessions,
-    required List<PlannedSession> plannedSessions,
-    required double thresholdMinutes,
-  }) {
-    if (validSessions.isEmpty) return 40.0;
-
-    double score = 20.0; // Baseline
-
-    // 1. Recency of latest session (Max 35 points)
-    final latest = validSessions.reduce((a, b) => a.endTime.isAfter(b.endTime) ? a : b);
-    final hoursSince = DateTime.now().difference(latest.endTime).inHours;
-
-    if (hoursSince <= 18) {
-      score += 35.0;
-    } else if (hoursSince <= 36) {
-      score += 25.0;
-    } else if (hoursSince <= 60) {
-      score += 15.0;
-    } else {
-      score += 5.0;
-    }
-
-    // 2. Planning and Completion Integrity (Max 25 points)
-    if (plannedSessions.isNotEmpty) {
-      final completedPlanned = plannedSessions.where((p) => p.isCompleted).length;
-      final completionRatio = completedPlanned / plannedSessions.length;
-      score += (completionRatio * 25.0);
-    } else {
-      score += 15.0;
-    }
-
-    // 3. Sustained Flow Frequency (Max 20 points)
-    final flowSessions = validSessions
-        .where((s) => (s.elapsedSeconds / 60.0) >= thresholdMinutes)
-        .length;
-    final flowRatio = flowSessions / validSessions.length;
-    score += (flowRatio * 20.0);
-
-    return score.clamp(15.0, 95.0);
-  }
-
   static double _estimateReadinessWithInsufficientData({
     required List<CompletedSession> validSessions,
     required List<PlannedSession> plannedSessions,

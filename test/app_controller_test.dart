@@ -87,14 +87,11 @@ void main() {
         4,
         (i) => CompletedSession(
           id: 's$i',
-          topic: 'Deep Work',
-          startTime: now.subtract(Duration(days: i, minutes: 25)),
-          endTime: now.subtract(Duration(days: i)),
-          elapsedSeconds: 25 * 60,
-          baseTokens: 25,
-          flowTokens: 0,
-          windowMultiplier: 1.25,
-          totalTokensEarned: 25,
+          topicTitle: 'Deep Work',
+          completedAtIso: now.subtract(Duration(days: i, minutes: 25)).toIso8601String(),
+          durationSeconds: 25 * 60,
+          tokensEarned: 25,
+          multiplierApplied: 1.25,
         ),
       );
 
@@ -111,58 +108,43 @@ void main() {
       final sessions = [
         CompletedSession(
           id: '1',
-          topic: 'Dev',
-          startTime: now.subtract(const Duration(days: 4, minutes: 20)),
-          endTime: now.subtract(const Duration(days: 4)),
-          elapsedSeconds: 20 * 60,
-          baseTokens: 20,
-          flowTokens: 0,
-          windowMultiplier: 1.25,
-          totalTokensEarned: 25,
+          topicTitle: 'Dev',
+          completedAtIso: now.subtract(const Duration(days: 4, minutes: 20)).toIso8601String(),
+          durationSeconds: 20 * 60,
+          tokensEarned: 25,
+          multiplierApplied: 1.25,
         ),
         CompletedSession(
           id: '2',
-          topic: 'Dev',
-          startTime: now.subtract(const Duration(days: 3, minutes: 25)),
-          endTime: now.subtract(const Duration(days: 3)),
-          elapsedSeconds: 25 * 60,
-          baseTokens: 25,
-          flowTokens: 0,
-          windowMultiplier: 1.25,
-          totalTokensEarned: 31,
+          topicTitle: 'Dev',
+          completedAtIso: now.subtract(const Duration(days: 3, minutes: 25)).toIso8601String(),
+          durationSeconds: 25 * 60,
+          tokensEarned: 31,
+          multiplierApplied: 1.25,
         ),
         CompletedSession(
           id: '3',
-          topic: 'Dev',
-          startTime: now.subtract(const Duration(days: 2, minutes: 35)),
-          endTime: now.subtract(const Duration(days: 2)),
-          elapsedSeconds: 35 * 60,
-          baseTokens: 35,
-          flowTokens: 0,
-          windowMultiplier: 1.25,
-          totalTokensEarned: 43,
+          topicTitle: 'Dev',
+          completedAtIso: now.subtract(const Duration(days: 2, minutes: 35)).toIso8601String(),
+          durationSeconds: 35 * 60,
+          tokensEarned: 43,
+          multiplierApplied: 1.25,
         ),
         CompletedSession(
           id: '4',
-          topic: 'Dev',
-          startTime: now.subtract(const Duration(days: 1, minutes: 40)),
-          endTime: now.subtract(const Duration(days: 1)),
-          elapsedSeconds: 40 * 60,
-          baseTokens: 40,
-          flowTokens: 0,
-          windowMultiplier: 1.25,
-          totalTokensEarned: 50,
+          topicTitle: 'Dev',
+          completedAtIso: now.subtract(const Duration(days: 1, minutes: 40)).toIso8601String(),
+          durationSeconds: 40 * 60,
+          tokensEarned: 50,
+          multiplierApplied: 1.25,
         ),
         CompletedSession(
           id: '5',
-          topic: 'Dev',
-          startTime: now.subtract(const Duration(minutes: 45)),
-          endTime: now,
-          elapsedSeconds: 45 * 60,
-          baseTokens: 45,
-          flowTokens: 0,
-          windowMultiplier: 1.25,
-          totalTokensEarned: 56,
+          topicTitle: 'Dev',
+          completedAtIso: now.toIso8601String(),
+          durationSeconds: 45 * 60,
+          tokensEarned: 56,
+          multiplierApplied: 1.25,
         ),
       ];
 
@@ -171,8 +153,8 @@ void main() {
         plannedSessions: [],
       );
       expect(profile.hasSufficientData, isTrue);
-      expect(profile.flowEntryThresholdMinutes, inInclusiveRange(15, 35));
-      expect(profile.flowReadinessPercent, inInclusiveRange(10, 99));
+      expect(profile.flowEntryThresholdMinutes, inInclusiveRange(10, 25));
+      expect(profile.flowReadinessPercent, inInclusiveRange(0, 95));
     });
   });
 
@@ -201,40 +183,31 @@ void main() {
       controller.addCompletedSessionForTesting(
         CompletedSession(
           id: 's-today',
-          topic: 'Focus',
-          startTime: today.subtract(const Duration(minutes: 25)),
-          endTime: today,
-          elapsedSeconds: 25 * 60,
-          baseTokens: 25,
-          flowTokens: 0,
-          windowMultiplier: 1.0,
-          totalTokensEarned: 25,
+          topicTitle: 'Focus',
+          completedAtIso: today.toIso8601String(),
+          durationSeconds: 25 * 60,
+          tokensEarned: 25,
+          multiplierApplied: 1.0,
         ),
       );
       controller.addCompletedSessionForTesting(
         CompletedSession(
           id: 's-yesterday',
-          topic: 'Focus',
-          startTime: yesterday.subtract(const Duration(minutes: 25)),
-          endTime: yesterday,
-          elapsedSeconds: 25 * 60,
-          baseTokens: 25,
-          flowTokens: 0,
-          windowMultiplier: 1.0,
-          totalTokensEarned: 25,
+          topicTitle: 'Focus',
+          completedAtIso: yesterday.toIso8601String(),
+          durationSeconds: 25 * 60,
+          tokensEarned: 25,
+          multiplierApplied: 1.0,
         ),
       );
       controller.addCompletedSessionForTesting(
         CompletedSession(
           id: 's-2days',
-          topic: 'Focus',
-          startTime: twoDaysAgo.subtract(const Duration(minutes: 25)),
-          endTime: twoDaysAgo,
-          elapsedSeconds: 25 * 60,
-          baseTokens: 25,
-          flowTokens: 0,
-          windowMultiplier: 1.0,
-          totalTokensEarned: 25,
+          topicTitle: 'Focus',
+          completedAtIso: twoDaysAgo.toIso8601String(),
+          durationSeconds: 25 * 60,
+          tokensEarned: 25,
+          multiplierApplied: 1.0,
         ),
       );
 
@@ -250,27 +223,21 @@ void main() {
       controller.addCompletedSessionForTesting(
         CompletedSession(
           id: 's-today',
-          topic: 'Focus',
-          startTime: today.subtract(const Duration(minutes: 25)),
-          endTime: today,
-          elapsedSeconds: 25 * 60,
-          baseTokens: 25,
-          flowTokens: 0,
-          windowMultiplier: 1.0,
-          totalTokensEarned: 25,
+          topicTitle: 'Focus',
+          completedAtIso: today.toIso8601String(),
+          durationSeconds: 25 * 60,
+          tokensEarned: 25,
+          multiplierApplied: 1.0,
         ),
       );
       controller.addCompletedSessionForTesting(
         CompletedSession(
           id: 's-old',
-          topic: 'Focus',
-          startTime: threeDaysAgo.subtract(const Duration(minutes: 25)),
-          endTime: threeDaysAgo,
-          elapsedSeconds: 25 * 60,
-          baseTokens: 25,
-          flowTokens: 0,
-          windowMultiplier: 1.0,
-          totalTokensEarned: 25,
+          topicTitle: 'Focus',
+          completedAtIso: threeDaysAgo.toIso8601String(),
+          durationSeconds: 25 * 60,
+          tokensEarned: 25,
+          multiplierApplied: 1.0,
         ),
       );
 

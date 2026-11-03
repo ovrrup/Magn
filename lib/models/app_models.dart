@@ -363,17 +363,31 @@ class CompletedSession {
   final String? plannedSessionId;
   final bool isCancelled;
 
-  const CompletedSession({
+  CompletedSession({
     required this.id,
-    required this.topicTitle,
+    String? topicTitle,
     this.linkedGoalId,
-    required this.durationSeconds,
-    required this.tokensEarned,
-    required this.multiplierApplied,
-    required this.completedAtIso,
+    int? durationSeconds,
+    int? tokensEarned,
+    double? multiplierApplied,
+    String? completedAtIso,
     this.plannedSessionId,
     this.isCancelled = false,
-  });
+    // Backwards compatibility parameter aliases:
+    String? topic,
+    int? elapsedSeconds,
+    int? totalTokensEarned,
+    double? windowMultiplier,
+    DateTime? endTime,
+    DateTime? startTime,
+    int? baseTokens,
+    int? flowTokens,
+  })  : topicTitle = topicTitle ?? topic ?? 'Completed Session',
+        durationSeconds = durationSeconds ?? elapsedSeconds ?? 0,
+        tokensEarned = tokensEarned ?? totalTokensEarned ?? 0,
+        multiplierApplied = multiplierApplied ?? windowMultiplier ?? 1.0,
+        completedAtIso = completedAtIso ??
+            (endTime?.toIso8601String() ?? DateTime.now().toIso8601String());
 
   String get topic => topicTitle;
   int get elapsedSeconds => durationSeconds;
