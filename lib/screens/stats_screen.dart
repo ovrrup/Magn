@@ -86,7 +86,7 @@ class StatsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ACTIVE STREAK',
+                  'CURRENT STREAK',
                   style: TextStyle(
                     fontFamily: 'sans-serif',
                     fontSize: 9,
@@ -192,7 +192,7 @@ class StatsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'TOTAL FOCUS',
+                  'TOTAL FOCUS HOURS',
                   style: TextStyle(
                     fontFamily: 'sans-serif',
                     fontSize: 9,
@@ -303,7 +303,7 @@ class StatsScreen extends StatelessWidget {
                         height: 14,
                         margin: const EdgeInsets.symmetric(vertical: 2.0),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.circular(4),
                           color: _getHeatmapColor(minutes, palette),
                           border: Border.all(
                             color: Colors.white.withOpacity(0.08),

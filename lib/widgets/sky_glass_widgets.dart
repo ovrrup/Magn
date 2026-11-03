@@ -452,9 +452,9 @@ class SessionDetailDialog extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // Start Focus Button
+              // Start Now Button
               SkyPillButton(
-                label: 'Start This Session',
+                label: 'Start Now',
                 icon: Icons.play_arrow_rounded,
                 onPressed: () {
                   Navigator.of(context).pop();
@@ -465,13 +465,14 @@ class SessionDetailDialog extends StatelessWidget {
               if (onDeleteSession != null) ...[
                 const SizedBox(height: 10),
                 Center(
-                  child: TextButton(
+                  child: TextButton.icon(
+                    icon: Icon(Icons.delete_outline_rounded, size: 16, color: palette.deadlineAlertCoral),
                     onPressed: () {
                       Navigator.of(context).pop();
                       onDeleteSession!();
                     },
-                    child: Text(
-                      'Remove Planned Session',
+                    label: Text(
+                      'Delete',
                       style: TextStyle(
                         fontFamily: 'sans-serif',
                         fontSize: 13,

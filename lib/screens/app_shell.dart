@@ -44,6 +44,8 @@ class _AppShellState extends State<AppShell> {
       const StatsScreen(),
     ];
 
+    final navHeight = 64.0 + MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: palette.backgroundColor,
       body: Container(
@@ -55,9 +57,9 @@ class _AppShellState extends State<AppShell> {
         ),
         child: Stack(
           children: [
-            // 1. Tab content stack (leaves clearance for the frosted bottom navigation dock)
+            // 1. Tab content stack (leaves exact clearance for bottom navigation dock)
             Positioned.fill(
-              bottom: 68,
+              bottom: navHeight,
               child: IndexedStack(
                 index: _currentTabIndex,
                 children: screens,

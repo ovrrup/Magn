@@ -6,20 +6,17 @@ import '../theme/sky_theme.dart';
 import '../widgets/pedestal_node.dart';
 import '../widgets/sky_glass_widgets.dart';
 import 'active_focus_screen.dart';
+import 'plan_screen.dart';
 import 'settings_sheet.dart';
 
 /// Tab 1: Home Screen (Serene Sky Sanctuary).
 ///
-/// Features:
-/// - Top Header: ONLY Settings tune icon on left; Streak and Tokens counter pills on right.
-/// - Peek-Edge Hero Carousel: 132px height, PageView.builder, viewportFraction 0.82,
-///   itemCount 10000, initialIndex 4000, 4 cycling cards with Matrix4 scale peaking.
-/// - Central User-Planned Stepping-Stone Path:
-///   * Calm empty state when no sessions planned.
-///   * 2.5D cylindrical pedestal nodes stacked vertically (newest on TOP) with dashed separators.
-///   * Interactive SessionDetailDialog with reward rules clearly explained.
-/// - Docked Cloud White Primary CTA Pill Button:
-///   * "Plan a Session" (if empty) vs "Start • [Topic]" (if planned).
+/// Strictly adheres to:
+/// - (1) When plannedSessions is empty, renders ONLY const SizedBox.shrink() in the center area.
+///   (Strictly NO sprout icon, NO "Sanctuary Horizon Clear", NO instructional sentences or empty-state paragraphs).
+/// - (2) Inside top carousel cards, NEVER renders instructional sentences. Each card displays ONLY
+///   an 11px uppercase label, a 26px bold primary value, and a short 13px metadata pill.
+/// - (3) Never glued onto the bottom nav bar: enforces an exact 14px bottom margin gap.
 class HomeScreen extends StatefulWidget {
   final VoidCallback onNavigateToPlan;
 
@@ -77,39 +74,64 @@ class _HomeScreenState extends State<HomeScreen> {
       bottom: false,
       child: Column(
         children: [
-          const SizedBox(height: 8),
+          // 1. Top Row (padding horizontal 20px, top 12px)
+          _buildTopRow(context, controller, palette),
 
-          // 1. Top Header (Settings icon ONLY on left, Streak & Tokens on right)
-          _buildHeader(context, controller, palette),
-
-          const SizedBox(height: 12),
-
-          // 2. Peek-Edge Hero Carousel (132px height, 4 cycling cards)
+          // 2. Looping Peek-Edge Hero Carousel (height 112px, top margin 16px)
           _buildHeroCarousel(controller, palette),
 
-          const SizedBox(height: 12),
-
-          // 3. Central Stepping-Stone Path (Expanded & Scrollable)
+          // 3. Center Stepping-Stone Path (Expanded)
           Expanded(
             child: _buildSteppingStonePath(context, controller, planned, palette),
           ),
 
-          // 4. Docked Primary Cloud White Pill Button (above bottom navigation)
+          // 4. Docked Primary Pill Button (height 54px, horizontal margin 20px, bottom margin 14px above nav bar)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: SkyPillButton(
-              height: 56,
-              icon: nextSession != null ? Icons.play_arrow_rounded : Icons.add_rounded,
-              label: nextSession != null
-                  ? 'Start • ${nextSession.topic}'
-                  : 'Plan a Session',
-              onPressed: () {
-                if (nextSession != null) {
-                  _launchActiveFocus(controller, plannedSession: nextSession);
-                } else {
-                  widget.onNavigateToPlan();
-                }
-              },
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+            child: SizedBox(
+              height: 54,
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFFFFF), // Cloud White #FFFFFF
+                  foregroundColor: const Color(0xFF0F172A), // Deep navy #0F172A
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(27),
+                  ),
+                ),
+                onPressed: () {
+                  if (nextSession != null) {
+                    _launchActiveFocus(controller, plannedSession: nextSession);
+                  } else {
+                    PlanScreen.showPlanSessionModal(context, controller, palette);
+                  }
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (nextSession != null) ...[
+                      const Icon(Icons.play_arrow_rounded, size: 22, color: Color(0xFF0F172A)),
+                      const SizedBox(width: 8),
+                    ],
+                    Flexible(
+                      child: Text(
+                        nextSession != null
+                            ? 'Start • ${nextSession.topicTitle}'
+                            : 'Plan a Session',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'sans-serif',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -117,13 +139,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, AppController controller, SkyPalette palette) {
+  Widget _buildTopRow(BuildContext context, AppController controller, SkyPalette palette) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left: Frosted Settings tune icon ONLY
+          // Left: 42x42px circular frosted Settings button (Icons.tune_rounded, size 20)
           SkyGlassCard(
             padding: EdgeInsets.zero,
             width: 42,
@@ -139,12 +161,22 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // Right: Streak and Tokens Counter Pills
+          // Right: Two compact frosted pills (8px gap, height 38px, horizontal padding 14px)
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Streak Pill
-              SkyGlassPill(
+              Container(
+                height: 38,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(19),
+                  color: Colors.white.withOpacity(palette.isDark ? 0.12 : 0.18),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(palette.isDark ? 0.20 : 0.32),
+                    width: 1.0,
+                  ),
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -153,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: palette.amberGold,
                       size: 18,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 6),
                     Text(
                       '${controller.currentStreak}',
                       style: TextStyle(
@@ -169,8 +201,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(width: 8),
 
-              // Wallet Tokens Pill
-              SkyGlassPill(
+              // Tokens Pill
+              Container(
+                height: 38,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(19),
+                  color: Colors.white.withOpacity(palette.isDark ? 0.12 : 0.18),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(palette.isDark ? 0.20 : 0.32),
+                    width: 1.0,
+                  ),
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -179,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: palette.amberGold,
                       size: 16,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 6),
                     Text(
                       '${controller.walletTokenBalance}',
                       style: TextStyle(
@@ -199,13 +241,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Peek-Edge Hero Carousel: 132px height, PageView.builder with Matrix4 scaling.
+  /// Looping Peek-Edge Hero Carousel (height 112px, top margin 16px)
   Widget _buildHeroCarousel(AppController controller, SkyPalette palette) {
-    return SizedBox(
-      height: 132,
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      height: 112,
       child: PageView.builder(
         controller: _carouselPageController,
         physics: const BouncingScrollPhysics(),
+        itemCount: 10000,
         onPageChanged: (idx) {
           setState(() {
             _currentCarouselPage = idx;
@@ -223,13 +267,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 final diff = (page - index).abs();
                 scale = (1.0 - (diff * 0.14)).clamp(0.86, 1.0);
               } else {
-                scale = index == _currentCarouselPage ? 1.0 : 0.88;
+                scale = index == _currentCarouselPage ? 1.0 : 0.86;
               }
 
               return Transform.scale(
                 scale: scale,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
                   child: _buildCarouselCard(cardIndex, controller, palette),
                 ),
               );
@@ -241,272 +285,117 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCarouselCard(int cardIndex, AppController controller, SkyPalette palette) {
+    String label;
+    String value;
+    String subtitle;
+
     switch (cardIndex) {
       case 0:
-        // Card 1: Next Planned Topic
+        // Card 0: NEXT PLANNED
+        label = 'NEXT PLANNED';
         final next = controller.nextPlannedSession;
-        return SkyGlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          borderRadius: BorderRadius.circular(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'NEXT PLANNED TOPIC',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: palette.secondaryText,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.flag_rounded, color: palette.amberGold, size: 16),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                next?.topic ?? 'No Sessions Planned',
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: palette.primaryText,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 3),
-              Text(
-                next != null
-                    ? '${next.plannedDurationMinutes}m • ${next.preferredWindow?.toDisplayString() ?? "Anytime"} • +${next.estimatedBaseTokens} Tokens'
-                    : 'Tap "Plan a Session" below to anchor your focus.',
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  fontSize: 11,
-                  color: palette.secondaryText,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        );
+        value = next?.topicTitle ?? 'No Plan';
+        subtitle = next != null
+            ? '${next.preferredWindow?.toDisplayString() ?? "Flexible Window"} • +${next.estimatedBaseTokens} Tokens'
+            : 'Tap button below';
+        break;
 
       case 1:
-        // Card 2: Best Session
+        // Card 1: BEST SESSION
+        label = 'BEST SESSION';
         final best = controller.bestSession;
-        return SkyGlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          borderRadius: BorderRadius.circular(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'BEST COMPLETED SESSION',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: palette.secondaryText,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.workspace_premium_rounded, color: palette.amberGold, size: 16),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                best != null
-                    ? '${best.elapsedMinutes}m Focus • ${best.topic}'
-                    : 'Awaiting Ignition',
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: palette.primaryText,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 3),
-              Text(
-                best != null
-                    ? '+${best.totalTokensEarned} Tokens Earned (${best.windowMultiplier}x Window)'
-                    : 'Complete focus sessions to record your peak state.',
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  fontSize: 11,
-                  color: palette.secondaryText,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        );
+        value = best != null ? '${best.elapsedMinutes}m • +${best.totalTokensEarned}' : '0m';
+        subtitle = best?.topicTitle ?? 'None';
+        break;
 
       case 2:
-        // Card 3: Top Focus Topic
+        // Card 2: TOP FOCUS TOPIC
+        label = 'TOP FOCUS TOPIC';
         final top = controller.topFocusTopic;
         final topMinutes = top != null ? (top.value ~/ 60) : 0;
-        final topHours = (topMinutes / 60.0).toStringAsFixed(1);
-
-        return SkyGlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          borderRadius: BorderRadius.circular(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'TOP FOCUS TOPIC',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: palette.secondaryText,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.track_changes_rounded, color: palette.mintAura, size: 16),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                top?.key ?? 'No Topic Data',
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: palette.primaryText,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 3),
-              Text(
-                top != null
-                    ? '$topHours hours invested across focus history.'
-                    : 'Targeted focus topics will aggregate here.',
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  fontSize: 11,
-                  color: palette.secondaryText,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        );
+        value = top?.key ?? 'None';
+        subtitle = top != null
+            ? '${(topMinutes / 60.0).toStringAsFixed(1)}h logged (${topMinutes}m)'
+            : '0m logged';
+        break;
 
       case 3:
       default:
-        // Card 4: Flow Readiness %
-        final profile = controller.flowProfile;
-        return SkyGlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          borderRadius: BorderRadius.circular(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'FLOW READINESS (ESTIMATE)',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: palette.secondaryText,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.bolt_rounded, color: palette.amberGold, size: 16),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(
-                    '${profile.flowReadinessPercent.toStringAsFixed(0)}%',
-                    style: TextStyle(
-                      fontFamily: 'sans-serif',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: palette.amberGold,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '• ${profile.readinessLabel}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: palette.primaryText,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                profile.hasSufficientData
-                    ? 'Evaluated from historical cadence & session regularity.'
-                    : 'Calibrating estimate until 5 sessions are completed.',
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  fontSize: 11,
-                  color: palette.secondaryText,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        );
+        // Card 3: FLOW READINESS
+        label = 'FLOW READINESS';
+        value = '${controller.flowReadinessPercent.round()}%';
+        subtitle = 'Based on ${controller.completedSessions.length} sessions';
+        break;
     }
+
+    return SkyGlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      borderRadius: BorderRadius.circular(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 11px uppercase label
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: 'sans-serif',
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: palette.secondaryText,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 2),
+
+          // 26px bold primary value
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: 'sans-serif',
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+              color: palette.primaryText,
+              height: 1.15,
+            ),
+          ),
+          const SizedBox(height: 4),
+
+          // Short 13px metadata pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(palette.isDark ? 0.08 : 0.15),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Colors.white.withOpacity(palette.isDark ? 0.15 : 0.25),
+                width: 0.5,
+              ),
+            ),
+            child: Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'sans-serif',
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: palette.secondaryText,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  /// Central Stepping-Stone Path (empty state or vertical 2.5D white pedestals).
+  /// Center Stepping-Stone Path (Expanded):
+  /// STRICT CONSTRAINT: if plannedSessions is empty, return const SizedBox.shrink()
+  /// (Strictly NO icons, NO "Sanctuary Horizon Clear", NO instructional sentences or paragraphs).
   Widget _buildSteppingStonePath(
     BuildContext context,
     AppController controller,
@@ -514,96 +403,94 @@ class _HomeScreenState extends State<HomeScreen> {
     SkyPalette palette,
   ) {
     if (planned.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(palette.isDark ? 0.08 : 0.15),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(palette.isDark ? 0.20 : 0.35),
-                  ),
-                ),
-                child: Icon(
-                  Icons.spa_rounded,
-                  color: palette.mintAura,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'Sanctuary Horizon Clear',
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: palette.primaryText,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'No sessions are currently planned.\nAnchor your next focus intention to place your first stepping-stone.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  fontSize: 13,
-                  color: palette.secondaryText,
-                  height: 1.35,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
-    // Sessions are planned: newly planned sessions stack ABOVE existing ones!
-    return ListView.builder(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: planned.length,
-      itemBuilder: (context, index) {
-        final session = planned[index];
+    // Sessions are planned: newly added sessions stack UPWARD above existing ones (reverse: true)
+    return Center(
+      child: SingleChildScrollView(
+        reverse: true,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(planned.length, (index) {
+            final session = planned[index];
+            final sessionNumber = planned.length - index;
 
-        return Column(
-          children: [
-            // Pedestal Node
-            PedestalNode(
-              session: session,
-              badgeIcon: Icons.layers_rounded,
-              onTap: () {
-                SessionDetailDialog.show(
-                  context: context,
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Pedestal Node
+                PedestalNode(
                   session: session,
-                  onStartSession: () => _launchActiveFocus(controller, plannedSession: session),
-                  onDeleteSession: () => controller.deletePlannedSession(session.id),
-                );
-              },
-            ),
+                  badgeIcon: Icons.layers_rounded,
+                  onTap: () {
+                    SessionDetailDialog.show(
+                      context: context,
+                      session: session,
+                      onStartSession: () => _launchActiveFocus(controller, plannedSession: session),
+                      onDeleteSession: () => controller.deletePlannedSession(session.id),
+                    );
+                  },
+                ),
 
-            // Subtle Dashed Horizontal Separator (if not last)
-            if (index < planned.length - 1)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 14.0),
-                child: SizedBox(
-                  width: 140,
-                  height: 1,
-                  child: CustomPaint(
-                    painter: _DashedLinePainter(
-                      color: Colors.white.withOpacity(palette.isDark ? 0.20 : 0.35),
+                // Subtle 1px dashed horizontal divider line labeled with session number
+                if (index < planned.length - 1)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 44,
+                          height: 1,
+                          child: CustomPaint(
+                            painter: _DashedLinePainter(
+                              color: Colors.white.withOpacity(palette.isDark ? 0.20 : 0.35),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(palette.isDark ? 0.08 : 0.16),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(palette.isDark ? 0.18 : 0.28),
+                                width: 1.0,
+                              ),
+                            ),
+                            child: Text(
+                              'Session #$sessionNumber',
+                              style: TextStyle(
+                                fontFamily: 'sans-serif',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: palette.secondaryText,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 44,
+                          height: 1,
+                          child: CustomPaint(
+                            painter: _DashedLinePainter(
+                              color: Colors.white.withOpacity(palette.isDark ? 0.20 : 0.35),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ),
-          ],
-        );
-      },
+              ],
+            );
+          }),
+        ),
+      ),
     );
   }
 }

@@ -111,127 +111,189 @@ extension WindowRelationExtension on WindowRelation {
 /// A planned focus session configured by the user.
 class PlannedSession {
   final String id;
-  final String topic;
-  final int plannedDurationMinutes;
-  final TimeWindow? preferredWindow;
+  final String topicTitle;
   final String? linkedGoalId;
-  final DateTime createdAt;
+  final int plannedMinutes;
+  final int? preferredStartMinutesFromMidnight;
+  final int? preferredEndMinutesFromMidnight;
+  final String? deadlineIso;
+  final String createdAtIso;
   final bool isCompleted;
-  final DateTime? completedAt;
+  final String? completedAtIso;
   final String? completedSessionId;
 
   const PlannedSession({
     required this.id,
-    required this.topic,
-    required this.plannedDurationMinutes,
-    this.preferredWindow,
+    required this.topicTitle,
     this.linkedGoalId,
-    required this.createdAt,
+    required this.plannedMinutes,
+    this.preferredStartMinutesFromMidnight,
+    this.preferredEndMinutesFromMidnight,
+    this.deadlineIso,
+    required this.createdAtIso,
     this.isCompleted = false,
-    this.completedAt,
+    this.completedAtIso,
     this.completedSessionId,
   });
 
-  /// Evaluates estimated token reward based on standard 1.0x multiplier.
-  int get estimatedBaseTokens => plannedDurationMinutes;
+  String get topic => topicTitle;
+  int get plannedDurationMinutes => plannedMinutes;
+  int get estimatedBaseTokens => plannedMinutes;
+  DateTime get createdAt => DateTime.tryParse(createdAtIso) ?? DateTime.now();
+  DateTime? get deadlineDate => deadlineIso != null ? DateTime.tryParse(deadlineIso!) : null;
+  DateTime? get completedAt => completedAtIso != null ? DateTime.tryParse(completedAtIso!) : null;
+
+  TimeWindow? get preferredWindow {
+    if (preferredStartMinutesFromMidnight == null || preferredEndMinutesFromMidnight == null) {
+      return null;
+    }
+    return TimeWindow(
+      startHour: preferredStartMinutesFromMidnight! ~/ 60,
+      startMinute: preferredStartMinutesFromMidnight! % 60,
+      endHour: preferredEndMinutesFromMidnight! ~/ 60,
+      endMinute: preferredEndMinutesFromMidnight! % 60,
+    );
+  }
 
   /// Checks if this planned session is approaching its deadline or preferred window
   /// (today, overdue, or within the next 24 hours).
   bool isApproachingDeadline(DateTime now) {
     if (isCompleted) return false;
-    if (preferredWindow == null) return false;
-
-    // Check if preferred window start is within 24 hours or overdue today
-    final windowTodayStart = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      preferredWindow!.startHour,
-      preferredWindow!.startMinute,
-    );
-
-    final diff = windowTodayStart.difference(now);
-    // Overdue or within next 24 hours
-    return diff.inHours <= 24;
+    if (deadlineDate != null) {
+      final deadline = deadlineDate!;
+      final today = DateTime(now.year, now.month, now.day);
+      final deadlineDay = DateTime(deadline.year, deadline.month, deadline.day);
+      if (deadlineDay.isBefore(today)) return true;
+      if (deadlineDay.isAtSameMomentAs(today)) return true;
+      final diff = deadline.difference(now);
+      if (diff.inHours <= 24 && !diff.isNegative) return true;
+    }
+    if (preferredWindow != null) {
+      final windowTodayStart = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        preferredWindow!.startHour,
+        preferredWindow!.startMinute,
+      );
+      final diff = windowTodayStart.difference(now);
+      return diff.inHours <= 24;
+    }
+    return false;
   }
 
   PlannedSession copyWith({
     String? id,
+    String? topicTitle,
+    String? linkedGoalId,
+    int? plannedMinutes,
+    int? preferredStartMinutesFromMidnight,
+    int? preferredEndMinutesFromMidnight,
+    String? deadlineIso,
+    String? createdAtIso,
+    bool? isCompleted,
+    String? completedAtIso,
+    String? completedSessionId,
+    // backwards compatibility arguments
     String? topic,
     int? plannedDurationMinutes,
     TimeWindow? preferredWindow,
-    String? linkedGoalId,
     DateTime? createdAt,
-    bool? isCompleted,
     DateTime? completedAt,
-    String? completedSessionId,
   }) {
+    int? startMin = preferredStartMinutesFromMidnight;
+    int? endMin = preferredEndMinutesFromMidnight;
+    if (preferredWindow != null) {
+      startMin = preferredWindow.startHour * 60 + preferredWindow.startMinute;
+      endMin = preferredWindow.endHour * 60 + preferredWindow.endMinute;
+    }
+
     return PlannedSession(
       id: id ?? this.id,
-      topic: topic ?? this.topic,
-      plannedDurationMinutes: plannedDurationMinutes ?? this.plannedDurationMinutes,
-      preferredWindow: preferredWindow ?? this.preferredWindow,
+      topicTitle: topicTitle ?? (topic ?? this.topicTitle),
       linkedGoalId: linkedGoalId ?? this.linkedGoalId,
-      createdAt: createdAt ?? this.createdAt,
+      plannedMinutes: plannedMinutes ?? (plannedDurationMinutes ?? this.plannedMinutes),
+      preferredStartMinutesFromMidnight: startMin ?? this.preferredStartMinutesFromMidnight,
+      preferredEndMinutesFromMidnight: endMin ?? this.preferredEndMinutesFromMidnight,
+      deadlineIso: deadlineIso ?? this.deadlineIso,
+      createdAtIso: createdAtIso ?? (createdAt?.toIso8601String() ?? this.createdAtIso),
       isCompleted: isCompleted ?? this.isCompleted,
-      completedAt: completedAt ?? this.completedAt,
+      completedAtIso: completedAtIso ?? (completedAt?.toIso8601String() ?? this.completedAtIso),
       completedSessionId: completedSessionId ?? this.completedSessionId,
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'topic': topic,
-        'plannedDurationMinutes': plannedDurationMinutes,
-        'preferredWindow': preferredWindow?.toJson(),
+        'topicTitle': topicTitle,
         'linkedGoalId': linkedGoalId,
-        'createdAt': createdAt.toIso8601String(),
+        'plannedMinutes': plannedMinutes,
+        'preferredStartMinutesFromMidnight': preferredStartMinutesFromMidnight,
+        'preferredEndMinutesFromMidnight': preferredEndMinutesFromMidnight,
+        'deadlineIso': deadlineIso,
+        'createdAtIso': createdAtIso,
         'isCompleted': isCompleted,
-        'completedAt': completedAt?.toIso8601String(),
+        'completedAtIso': completedAtIso,
         'completedSessionId': completedSessionId,
+        'topic': topicTitle,
+        'plannedDurationMinutes': plannedMinutes,
+        'preferredWindow': preferredWindow?.toJson(),
+        'createdAt': createdAtIso,
+        'completedAt': completedAtIso,
       };
 
   factory PlannedSession.fromJson(Map<String, dynamic> json) {
+    int? startMin = json['preferredStartMinutesFromMidnight'] as int?;
+    int? endMin = json['preferredEndMinutesFromMidnight'] as int?;
+    if (startMin == null && json['preferredWindow'] != null) {
+      final tw = TimeWindow.fromJson(json['preferredWindow'] as Map<String, dynamic>);
+      startMin = tw.startHour * 60 + tw.startMinute;
+      endMin = tw.endHour * 60 + tw.endMinute;
+    }
+
     return PlannedSession(
       id: json['id'] as String,
-      topic: json['topic'] as String? ?? 'Focus Session',
-      plannedDurationMinutes: json['plannedDurationMinutes'] as int? ?? 25,
-      preferredWindow: json['preferredWindow'] != null
-          ? TimeWindow.fromJson(json['preferredWindow'] as Map<String, dynamic>)
-          : null,
+      topicTitle: json['topicTitle'] as String? ?? (json['topic'] as String? ?? 'Focus Session'),
       linkedGoalId: json['linkedGoalId'] as String?,
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      plannedMinutes: json['plannedMinutes'] as int? ?? (json['plannedDurationMinutes'] as int? ?? 25),
+      preferredStartMinutesFromMidnight: startMin,
+      preferredEndMinutesFromMidnight: endMin,
+      deadlineIso: json['deadlineIso'] as String?,
+      createdAtIso: json['createdAtIso'] as String? ??
+          (json['createdAt'] as String? ?? DateTime.now().toIso8601String()),
       isCompleted: json['isCompleted'] as bool? ?? false,
-      completedAt: json['completedAt'] != null
-          ? DateTime.tryParse(json['completedAt'] as String)
-          : null,
+      completedAtIso: json['completedAtIso'] as String? ?? json['completedAt'] as String?,
       completedSessionId: json['completedSessionId'] as String?,
     );
   }
 }
 
 /// A target objective or project goal created by the user.
-class Goal {
+class GoalItem {
   final String id;
   final String title;
-  final DateTime? deadlineDate;
-  final DateTime createdAt;
+  final String createdAtIso;
+  final String? deadlineIso;
+  final int totalMinutesInvested;
   final bool isCompleted;
-  final DateTime? completedAt;
 
-  const Goal({
+  const GoalItem({
     required this.id,
     required this.title,
-    this.deadlineDate,
-    required this.createdAt,
+    required this.createdAtIso,
+    this.deadlineIso,
+    this.totalMinutesInvested = 0,
     this.isCompleted = false,
-    this.completedAt,
   });
+
+  DateTime get createdAt => DateTime.tryParse(createdAtIso) ?? DateTime.now();
+  DateTime? get deadlineDate => deadlineIso != null ? DateTime.tryParse(deadlineIso!) : null;
 
   /// Checks if this goal is approaching its deadline (today, overdue, or within 24h).
   bool isApproachingDeadline(DateTime now) {
-    if (isCompleted || deadlineDate == null) return false;
-    final deadline = deadlineDate!;
+    if (isCompleted || deadlineIso == null) return false;
+    final deadline = deadlineDate;
+    if (deadline == null) return false;
     final today = DateTime(now.year, now.month, now.day);
     final deadlineDay = DateTime(deadline.year, deadline.month, deadline.day);
 
@@ -241,110 +303,121 @@ class Goal {
     return diff.inHours <= 24 && !diff.isNegative;
   }
 
-  Goal copyWith({
+  GoalItem copyWith({
     String? id,
     String? title,
+    String? createdAtIso,
+    String? deadlineIso,
+    int? totalMinutesInvested,
+    bool? isCompleted,
     DateTime? deadlineDate,
     DateTime? createdAt,
-    bool? isCompleted,
-    DateTime? completedAt,
   }) {
-    return Goal(
+    return GoalItem(
       id: id ?? this.id,
       title: title ?? this.title,
-      deadlineDate: deadlineDate ?? this.deadlineDate,
-      createdAt: createdAt ?? this.createdAt,
+      createdAtIso: createdAtIso ?? (createdAt?.toIso8601String() ?? this.createdAtIso),
+      deadlineIso: deadlineIso ?? (deadlineDate?.toIso8601String() ?? this.deadlineIso),
+      totalMinutesInvested: totalMinutesInvested ?? this.totalMinutesInvested,
       isCompleted: isCompleted ?? this.isCompleted,
-      completedAt: completedAt ?? this.completedAt,
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'title': title,
-        'deadlineDate': deadlineDate?.toIso8601String(),
-        'createdAt': createdAt.toIso8601String(),
+        'createdAtIso': createdAtIso,
+        'deadlineIso': deadlineIso,
+        'totalMinutesInvested': totalMinutesInvested,
         'isCompleted': isCompleted,
-        'completedAt': completedAt?.toIso8601String(),
+        'createdAt': createdAtIso,
+        'deadlineDate': deadlineIso,
       };
 
-  factory Goal.fromJson(Map<String, dynamic> json) {
-    return Goal(
+  factory GoalItem.fromJson(Map<String, dynamic> json) {
+    final created = json['createdAtIso'] as String? ??
+        (json['createdAt'] as String? ?? DateTime.now().toIso8601String());
+    final deadline = json['deadlineIso'] as String? ?? json['deadlineDate'] as String?;
+    return GoalItem(
       id: json['id'] as String,
       title: json['title'] as String? ?? 'Untitled Goal',
-      deadlineDate: json['deadlineDate'] != null
-          ? DateTime.tryParse(json['deadlineDate'] as String)
-          : null,
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      createdAtIso: created,
+      deadlineIso: deadline,
+      totalMinutesInvested: json['totalMinutesInvested'] as int? ?? 0,
       isCompleted: json['isCompleted'] as bool? ?? false,
-      completedAt: json['completedAt'] != null
-          ? DateTime.tryParse(json['completedAt'] as String)
-          : null,
     );
   }
 }
 
+typedef Goal = GoalItem;
+
 /// A completed focus session record logged in the system.
 class CompletedSession {
   final String id;
-  final String? plannedSessionId;
-  final String topic;
-  final DateTime startTime;
-  final DateTime endTime;
-  final int elapsedSeconds;
-  final int baseTokens;
-  final int flowTokens;
-  final double windowMultiplier;
-  final int totalTokensEarned;
-  final bool isCancelled;
+  final String topicTitle;
   final String? linkedGoalId;
+  final int durationSeconds;
+  final int tokensEarned;
+  final double multiplierApplied;
+  final String completedAtIso;
+  final String? plannedSessionId;
+  final bool isCancelled;
 
   const CompletedSession({
     required this.id,
-    this.plannedSessionId,
-    required this.topic,
-    required this.startTime,
-    required this.endTime,
-    required this.elapsedSeconds,
-    required this.baseTokens,
-    required this.flowTokens,
-    required this.windowMultiplier,
-    required this.totalTokensEarned,
-    this.isCancelled = false,
+    required this.topicTitle,
     this.linkedGoalId,
+    required this.durationSeconds,
+    required this.tokensEarned,
+    required this.multiplierApplied,
+    required this.completedAtIso,
+    this.plannedSessionId,
+    this.isCancelled = false,
   });
 
-  int get elapsedMinutes => elapsedSeconds ~/ 60;
+  String get topic => topicTitle;
+  int get elapsedSeconds => durationSeconds;
+  int get elapsedMinutes => durationSeconds ~/ 60;
+  int get totalTokensEarned => tokensEarned;
+  double get windowMultiplier => multiplierApplied;
+  DateTime get endTime => DateTime.tryParse(completedAtIso) ?? DateTime.now();
+  DateTime get startTime => endTime.subtract(Duration(seconds: durationSeconds));
+  int get baseTokens => durationSeconds >= 60 ? (durationSeconds ~/ 60) : 0;
+  int get flowTokens => (tokensEarned - (baseTokens * multiplierApplied).floor()).clamp(0, 999999);
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'topicTitle': topicTitle,
+        'linkedGoalId': linkedGoalId,
+        'durationSeconds': durationSeconds,
+        'tokensEarned': tokensEarned,
+        'multiplierApplied': multiplierApplied,
+        'completedAtIso': completedAtIso,
         'plannedSessionId': plannedSessionId,
-        'topic': topic,
+        'isCancelled': isCancelled,
+        'topic': topicTitle,
         'startTime': startTime.toIso8601String(),
         'endTime': endTime.toIso8601String(),
-        'elapsedSeconds': elapsedSeconds,
+        'elapsedSeconds': durationSeconds,
         'baseTokens': baseTokens,
         'flowTokens': flowTokens,
-        'windowMultiplier': windowMultiplier,
-        'totalTokensEarned': totalTokensEarned,
-        'isCancelled': isCancelled,
-        'linkedGoalId': linkedGoalId,
+        'windowMultiplier': multiplierApplied,
+        'totalTokensEarned': tokensEarned,
       };
 
   factory CompletedSession.fromJson(Map<String, dynamic> json) {
     return CompletedSession(
       id: json['id'] as String,
-      plannedSessionId: json['plannedSessionId'] as String?,
-      topic: json['topic'] as String? ?? 'Completed Session',
-      startTime: DateTime.tryParse(json['startTime'] as String? ?? '') ?? DateTime.now(),
-      endTime: DateTime.tryParse(json['endTime'] as String? ?? '') ?? DateTime.now(),
-      elapsedSeconds: json['elapsedSeconds'] as int? ?? 0,
-      baseTokens: json['baseTokens'] as int? ?? 0,
-      flowTokens: json['flowTokens'] as int? ?? 0,
-      windowMultiplier: (json['windowMultiplier'] as num?)?.toDouble() ?? 1.0,
-      totalTokensEarned: json['totalTokensEarned'] as int? ?? 0,
-      isCancelled: json['isCancelled'] as bool? ?? false,
+      topicTitle: json['topicTitle'] as String? ?? (json['topic'] as String? ?? 'Completed Session'),
       linkedGoalId: json['linkedGoalId'] as String?,
+      durationSeconds: json['durationSeconds'] as int? ?? (json['elapsedSeconds'] as int? ?? 0),
+      tokensEarned: json['tokensEarned'] as int? ?? (json['totalTokensEarned'] as int? ?? 0),
+      multiplierApplied: (json['multiplierApplied'] as num?)?.toDouble() ??
+          ((json['windowMultiplier'] as num?)?.toDouble() ?? 1.0),
+      completedAtIso: json['completedAtIso'] as String? ??
+          (json['endTime'] as String? ?? DateTime.now().toIso8601String()),
+      plannedSessionId: json['plannedSessionId'] as String?,
+      isCancelled: json['isCancelled'] as bool? ?? false,
     );
   }
 }

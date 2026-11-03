@@ -39,38 +39,35 @@ class FlowEngine {
         .toList()
       ..sort();
 
-    // Partition into early bailouts (< 20m) vs sustained sessions (>= 20m)
-    final earlyBailouts = durationsMinutes.where((d) => d < 20.0).toList();
-    final sustainedSessions = durationsMinutes.where((d) => d >= 20.0).toList();
+    // Partition into early bailouts (< 25m) vs sustained sessions (>= 25m)
+    final earlyBailouts = durationsMinutes.where((d) => d < 25.0).toList();
+    final sustainedSessions = durationsMinutes.where((d) => d >= 25.0).toList();
 
     double calculatedThreshold = defaultThresholdMinutes;
 
-    if (sustainedSessions.isNotEmpty) {
-      if (earlyBailouts.isNotEmpty) {
-        // Find the 80th percentile of early drop-offs
-        final index = (earlyBailouts.length * 0.80).clamp(0, earlyBailouts.length - 1).toInt();
-        calculatedThreshold = earlyBailouts[index];
-      } else {
-        // No early drop-offs logged; use lower quartile of sustained sessions
-        final index = (sustainedSessions.length * 0.25).clamp(0, sustainedSessions.length - 1).toInt();
-        calculatedThreshold = sustainedSessions[index];
-      }
+    if (earlyBailouts.isNotEmpty) {
+      // Find the 85th percentile of early drop-offs
+      final index = (earlyBailouts.length * 0.85).clamp(0, earlyBailouts.length - 1).toInt();
+      calculatedThreshold = earlyBailouts[index];
+    } else if (sustainedSessions.isNotEmpty) {
+      // No early drop-offs logged; use lower quartile of sustained sessions
+      final index = (sustainedSessions.length * 0.25).clamp(0, sustainedSessions.length - 1).toInt();
+      calculatedThreshold = sustainedSessions[index];
     }
 
     // Clamp personal threshold within reasonable bounds [10m, 25m]
     calculatedThreshold = calculatedThreshold.clamp(10.0, 25.0);
 
-    // Calculate Flow Readiness %
-    final readiness = _calculateReadiness(
-      validSessions: validSessions,
-      plannedSessions: plannedSessions,
-      thresholdMinutes: calculatedThreshold,
-    );
+    // Calculate Flow Readiness % (0 to 95%) based on recent completion rate exceeding threshold
+    final recent = validSessions.length > 10 ? validSessions.sublist(0, 10) : validSessions;
+    final exceeding = recent.where((s) => (s.elapsedSeconds / 60.0) >= calculatedThreshold).length;
+    final completionRate = exceeding / recent.length;
+    final readiness = (completionRate * 95.0).clamp(0.0, 95.0);
 
     String label;
     if (readiness >= 75.0) {
       label = 'High Likelihood';
-    } else if (readiness >= 50.0) {
+    } else if (readiness >= 45.0) {
       label = 'Moderate Likelihood';
     } else {
       label = 'Building Cadence';

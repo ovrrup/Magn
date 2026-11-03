@@ -35,17 +35,18 @@ class ActiveFocusScreen extends StatelessWidget {
     final showCentiseconds = controller.settings.precisionShowCentiseconds;
 
     // Multiplier description string
-    String multiplierLabel;
-    if (reward.isFlowMultiplierActive) {
-      final combined = (reward.windowMultiplier * 1.5).toStringAsFixed(2);
-      multiplierLabel = '${combined}x (Window + Flow Zone)';
-    } else if (controller.activeWindowMultiplier == 1.25) {
-      multiplierLabel = '1.25x Window Bonus';
+    String baseMultiplierLabel;
+    if (controller.activeWindowMultiplier == 1.25) {
+      baseMultiplierLabel = '1.25x Window Bonus';
     } else if (controller.activeWindowMultiplier == 0.75) {
-      multiplierLabel = '0.75x Post-Window';
+      baseMultiplierLabel = '0.75x Late';
     } else {
-      multiplierLabel = '1.0x Standard Rate';
+      baseMultiplierLabel = '1.0x Standard';
     }
+
+    final multiplierLabel = reward.isFlowMultiplierActive
+        ? '$baseMultiplierLabel + 1.5x Flow Zone'
+        : baseMultiplierLabel;
 
     return PopScope(
       canPop: false,
@@ -175,7 +176,7 @@ class ActiveFocusScreen extends StatelessWidget {
 
                             const SizedBox(height: 24),
 
-                            // 2. Main Tabular Digits (72px, 700 weight) + Optional Centiseconds
+                            // 2. Main Tabular Digits (68px, 700 weight) + Optional Centiseconds (28px)
                             FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Row(
@@ -187,7 +188,7 @@ class ActiveFocusScreen extends StatelessWidget {
                                     '$minutesStr:$secondsStr',
                                     style: TextStyle(
                                       fontFamily: 'sans-serif',
-                                      fontSize: 72,
+                                      fontSize: 68,
                                       fontWeight: FontWeight.w700,
                                       color: palette.primaryText,
                                       letterSpacing: 2.0,
@@ -208,7 +209,7 @@ class ActiveFocusScreen extends StatelessWidget {
                                       '.$centiStr',
                                       style: TextStyle(
                                         fontFamily: 'sans-serif',
-                                        fontSize: 32,
+                                        fontSize: 28,
                                         fontWeight: FontWeight.w600,
                                         color: palette.secondaryText,
                                         fontFeatures: const [
@@ -263,27 +264,50 @@ class ActiveFocusScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // Bottom Button: "Finish • +[X] Tokens"
+                  // Bottom Button: "Finish • +[X] Tokens" (margin 20px, bottom 24px)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: SkyPillButton(
-                      height: 58,
-                      icon: Icons.check_circle_rounded,
-                      label: 'Finish • +${reward.totalTokens} Tokens',
-                      onPressed: () async {
-                        final completed = await controller.finishFocusSession();
-                        if (context.mounted && completed != null) {
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Session completed! +${completed.totalTokensEarned} Tokens added to sanctuary wallet.',
-                              ),
-                              behavior: SnackBarBehavior.floating,
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                    child: SizedBox(
+                      height: 54,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFFFFF), // Cloud White #FFFFFF
+                          foregroundColor: const Color(0xFF0F172A), // Deep navy #0F172A
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(27),
+                          ),
+                        ),
+                        onPressed: () async {
+                          final completed = await controller.finishFocusSession();
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            if (completed != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Session completed! +${completed.totalTokensEarned} Tokens added to wallet.',
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Finish • +${reward.totalTokens} Tokens ($multiplierLabel)',
+                            style: const TextStyle(
+                              fontFamily: 'sans-serif',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF0F172A),
                             ),
-                          );
-                        }
-                      },
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],

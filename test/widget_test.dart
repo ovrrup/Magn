@@ -54,12 +54,13 @@ void main() {
     expect(find.byIcon(Icons.local_fire_department_rounded), findsOneWidget);
     expect(find.byIcon(Icons.auto_awesome_rounded), findsOneWidget);
 
-    // 3. Peek-Edge Hero Carousel (132px height, 4 cards cycling)
-    expect(find.text('NEXT PLANNED TOPIC'), findsWidgets);
-    expect(find.text('BEST COMPLETED SESSION'), findsWidgets);
+    // 3. Peek-Edge Hero Carousel (112px height, 4 cards cycling)
+    expect(find.text('NEXT PLANNED'), findsWidgets);
+    expect(find.text('BEST SESSION'), findsWidgets);
 
-    // 4. Stepping-Stone Path: Calm empty state when no sessions are planned
-    expect(find.text('Sanctuary Horizon Clear'), findsOneWidget);
+    // 4. Stepping-Stone Path: When no sessions planned, strictly SizedBox.shrink()
+    expect(find.text('Sanctuary Horizon Clear'), findsNothing);
+    expect(find.byIcon(Icons.spa_rounded), findsNothing);
 
     // 5. Docked Cloud White Pill Button
     expect(find.text('Plan a Session'), findsOneWidget);
@@ -100,9 +101,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Consistency & Telemetry'), findsOneWidget);
-    expect(find.text('ACTIVE STREAK'), findsOneWidget);
+    expect(find.text('CURRENT STREAK'), findsOneWidget);
     expect(find.text('TOTAL TOKENS'), findsOneWidget);
-    expect(find.text('TOTAL FOCUS'), findsOneWidget);
+    expect(find.text('TOTAL FOCUS HOURS'), findsOneWidget);
     expect(find.text('Focus Consistency Matrix'), findsOneWidget);
     expect(find.text('Chronological Session History'), findsOneWidget);
 
@@ -110,7 +111,7 @@ void main() {
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
 
-    expect(find.text('NEXT PLANNED TOPIC'), findsWidgets);
+    expect(find.text('NEXT PLANNED'), findsWidgets);
   });
 
   testWidgets('Home screen displays 2.5D Stepping-Stone Pedestals when sessions are planned',

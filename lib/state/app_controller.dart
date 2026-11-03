@@ -132,11 +132,11 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   /// Dynamic Streak Calculation:
-  /// Evaluated from actual consecutive local calendar dates with $\ge 1$ completed session.
-  /// Never relies on an arbitrary stored counter.
+  /// Evaluated from actual consecutive local calendar dates with >= 1 completed session.
+  /// If the latest session date is neither today nor yesterday, currentStreak MUST evaluate to 0 immediately.
   int get currentStreak {
     final valid = _completedSessions
-        .where((s) => !s.isCancelled && s.elapsedSeconds >= 60)
+        .where((s) => !s.isCancelled && s.durationSeconds >= 60)
         .toList();
 
     if (valid.isEmpty) return 0;
@@ -150,7 +150,7 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
         .toSet();
 
     if (!distinctDates.contains(today) && !distinctDates.contains(yesterday)) {
-      return 0; // Streak broken
+      return 0; // Streak broken immediately
     }
 
     int streak = 0;
@@ -248,17 +248,33 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
   /// Adds a newly planned session. Newly planned sessions stack ABOVE existing ones!
   Future<void> addPlannedSession({
     required String topic,
+    String? topicTitle,
     required int plannedDurationMinutes,
+    int? plannedMinutes,
     TimeWindow? preferredWindow,
+    int? preferredStartMinutesFromMidnight,
+    int? preferredEndMinutesFromMidnight,
     String? linkedGoalId,
+    String? deadlineIso,
   }) async {
+    final title = (topicTitle ?? topic).trim().isEmpty ? 'Deep Focus' : (topicTitle ?? topic).trim();
+    final minutes = plannedMinutes ?? plannedDurationMinutes;
+    int? startMin = preferredStartMinutesFromMidnight;
+    int? endMin = preferredEndMinutesFromMidnight;
+    if (startMin == null && preferredWindow != null) {
+      startMin = preferredWindow.startHour * 60 + preferredWindow.startMinute;
+      endMin = preferredWindow.endHour * 60 + preferredWindow.endMinute;
+    }
+
     final newSession = PlannedSession(
       id: 'plan_${DateTime.now().millisecondsSinceEpoch}',
-      topic: topic.trim().isEmpty ? 'Deep Focus' : topic.trim(),
-      plannedDurationMinutes: plannedDurationMinutes,
-      preferredWindow: preferredWindow,
+      topicTitle: title,
+      plannedMinutes: minutes,
+      preferredStartMinutesFromMidnight: startMin,
+      preferredEndMinutesFromMidnight: endMin,
       linkedGoalId: linkedGoalId,
-      createdAt: DateTime.now(),
+      deadlineIso: deadlineIso,
+      createdAtIso: DateTime.now().toIso8601String(),
     );
 
     // Newly planned session appears ABOVE existing ones
@@ -278,12 +294,16 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> addGoal({
     required String title,
     DateTime? deadlineDate,
+    String? deadlineIso,
   }) async {
-    final newGoal = Goal(
+    final iso = deadlineIso ?? deadlineDate?.toIso8601String();
+    final newGoal = GoalItem(
       id: 'goal_${DateTime.now().millisecondsSinceEpoch}',
-      title: title.trim(),
-      deadlineDate: deadlineDate,
-      createdAt: DateTime.now(),
+      title: title.trim().isEmpty ? 'Untitled Goal' : title.trim(),
+      createdAtIso: DateTime.now().toIso8601String(),
+      deadlineIso: iso,
+      totalMinutesInvested: 0,
+      isCompleted: false,
     );
 
     _goals.insert(0, newGoal);
@@ -297,7 +317,6 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
       final goal = _goals[idx];
       _goals[idx] = goal.copyWith(
         isCompleted: !goal.isCompleted,
-        completedAt: !goal.isCompleted ? DateTime.now() : null,
       );
       await _persistAll();
       notifyListeners();
@@ -316,11 +335,22 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
     if (_isFocusSessionActive) return;
 
     _activePlannedSession = plannedSession;
-    _activeTopic = plannedSession?.topic ?? (customTopic ?? 'Deep Focus');
+    _activeTopic = plannedSession?.topicTitle ?? (customTopic ?? 'Deep Focus');
     _activeSessionStartTime = DateTime.now();
 
     // Evaluate window multiplier based on start time
-    if (plannedSession?.preferredWindow != null) {
+    if (plannedSession != null &&
+        plannedSession.preferredStartMinutesFromMidnight != null &&
+        plannedSession.preferredEndMinutesFromMidnight != null) {
+      final startMin = _activeSessionStartTime!.hour * 60 + _activeSessionStartTime!.minute;
+      if (startMin < plannedSession.preferredStartMinutesFromMidnight!) {
+        _activeWindowMultiplier = 1.0;
+      } else if (startMin <= plannedSession.preferredEndMinutesFromMidnight!) {
+        _activeWindowMultiplier = 1.25;
+      } else {
+        _activeWindowMultiplier = 0.75;
+      }
+    } else if (plannedSession?.preferredWindow != null) {
       final relation = plannedSession!.preferredWindow!.checkRelation(_activeSessionStartTime!);
       _activeWindowMultiplier = relation.multiplier;
     } else {
@@ -332,14 +362,15 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
     _focusStopwatch.start();
 
     _focusTicker?.cancel();
-    _focusTicker = Timer.periodic(const Duration(milliseconds: 50), (_) {
+    _focusTicker = Timer.periodic(const Duration(milliseconds: 30), (_) {
       notifyListeners();
     });
 
     notifyListeners();
   }
 
-  /// Completes the active focus session, awards calculated tokens, and stores records.
+  /// Completes the active focus session, awards calculated tokens, updates linked Goal's minutes,
+  /// removes completed PlannedSession from the queue, and stores records.
   Future<CompletedSession?> finishFocusSession() async {
     if (!_isFocusSessionActive) return null;
 
@@ -362,32 +393,34 @@ class AppController extends ChangeNotifier with WidgetsBindingObserver {
     final completedSession = CompletedSession(
       id: sessionId,
       plannedSessionId: _activePlannedSession?.id,
-      topic: _activeTopic,
-      startTime: _activeSessionStartTime ?? endTime.subtract(Duration(seconds: elapsedSec)),
-      endTime: endTime,
-      elapsedSeconds: elapsedSec,
-      baseTokens: breakdown.baseTokens,
-      flowTokens: breakdown.flowTokens,
-      windowMultiplier: _activeWindowMultiplier,
-      totalTokensEarned: breakdown.totalTokens,
-      isCancelled: false,
+      topicTitle: _activeTopic,
+      durationSeconds: elapsedSec,
+      tokensEarned: breakdown.totalTokens,
+      multiplierApplied: _activeWindowMultiplier,
+      completedAtIso: endTime.toIso8601String(),
       linkedGoalId: _activePlannedSession?.linkedGoalId,
+      isCancelled: false,
     );
 
     _completedSessionGuards.add(sessionId);
     _completedSessions.insert(0, completedSession);
     _walletTokenBalance += breakdown.totalTokens;
 
-    // Mark planned session as completed
-    if (_activePlannedSession != null) {
-      final idx = _plannedSessions.indexWhere((p) => p.id == _activePlannedSession!.id);
-      if (idx != -1) {
-        _plannedSessions[idx] = _plannedSessions[idx].copyWith(
-          isCompleted: true,
-          completedAt: endTime,
-          completedSessionId: sessionId,
+    // Update linked goal's invested minutes
+    final linkedGoalId = _activePlannedSession?.linkedGoalId;
+    if (linkedGoalId != null) {
+      final goalIdx = _goals.indexWhere((g) => g.id == linkedGoalId);
+      if (goalIdx != -1) {
+        final goal = _goals[goalIdx];
+        _goals[goalIdx] = goal.copyWith(
+          totalMinutesInvested: goal.totalMinutesInvested + (elapsedSec ~/ 60),
         );
       }
+    }
+
+    // Remove completed planned session from queue
+    if (_activePlannedSession != null) {
+      _plannedSessions.removeWhere((p) => p.id == _activePlannedSession!.id);
     }
 
     _isFocusSessionActive = false;

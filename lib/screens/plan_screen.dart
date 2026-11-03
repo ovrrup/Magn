@@ -201,7 +201,7 @@ class _PlanScreenState extends State<PlanScreen> {
       children: [
         // 1. Approaching Deadline Section (Completely hidden if empty!)
         if (approaching.isNotEmpty) ...[
-          _buildApproachingHeader('APPROACHING WINDOW (TODAY / 24H)', palette),
+          _buildApproachingHeader('NEAR DEADLINE', palette),
           const SizedBox(height: 8),
           ...approaching.map((session) => _buildSessionCard(session, controller, palette, isApproaching: true)),
           const SizedBox(height: 16),
@@ -359,7 +359,7 @@ class _PlanScreenState extends State<PlanScreen> {
       children: [
         // 1. Approaching Deadline Section (Completely hidden if empty!)
         if (approaching.isNotEmpty) ...[
-          _buildApproachingHeader('DEADLINE TODAY / WITHIN 24H', palette),
+          _buildApproachingHeader('NEAR DEADLINE', palette),
           const SizedBox(height: 8),
           ...approaching.map((goal) => _buildGoalCard(goal, controller, palette, isApproaching: true)),
           const SizedBox(height: 16),
@@ -513,49 +513,53 @@ class _PlanScreenState extends State<PlanScreen> {
 
   Widget _buildBottomActionButtons(BuildContext context, AppController controller, SkyPalette palette) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
       child: Row(
         children: [
-          // Left: + Plan Session (52px height)
+          // Left: + Plan Session (54px height)
           Expanded(
             child: SizedBox(
-              height: 52,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.add_rounded, size: 20),
-                label: const Text(
-                  '+ Plan Session',
-                  style: TextStyle(fontFamily: 'sans-serif', fontSize: 14, fontWeight: FontWeight.w600),
-                ),
+              height: 54,
+              child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: palette.pillButtonBg,
                   foregroundColor: palette.pillButtonText,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(27)),
                 ),
-                onPressed: () => _showPlanSessionModal(context, controller, palette),
+                onPressed: () => showPlanSessionModal(context, controller, palette),
+                child: const FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '+ Plan Session',
+                    style: TextStyle(fontFamily: 'sans-serif', fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ),
               ),
             ),
           ),
 
           const SizedBox(width: 12),
 
-          // Right: + New Goal (52px height)
+          // Right: + New Goal (54px height)
           Expanded(
             child: SizedBox(
-              height: 52,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.flag_rounded, size: 20),
-                label: const Text(
-                  '+ New Goal',
-                  style: TextStyle(fontFamily: 'sans-serif', fontSize: 14, fontWeight: FontWeight.w600),
-                ),
+              height: 54,
+              child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: palette.pillButtonBg,
                   foregroundColor: palette.pillButtonText,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(27)),
                 ),
-                onPressed: () => _showNewGoalModal(context, controller, palette),
+                onPressed: () => showNewGoalModal(context, controller, palette),
+                child: const FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '+ New Goal',
+                    style: TextStyle(fontFamily: 'sans-serif', fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ),
               ),
             ),
           ),
@@ -566,7 +570,7 @@ class _PlanScreenState extends State<PlanScreen> {
 
   // --- Session Planning Modal ---
 
-  void _showPlanSessionModal(BuildContext context, AppController controller, SkyPalette palette) {
+  static void showPlanSessionModal(BuildContext context, AppController controller, SkyPalette palette) {
     int duration = 25;
     TimeOfDay startTime = const TimeOfDay(hour: 9, minute: 0);
     TimeOfDay endTime = const TimeOfDay(hour: 11, minute: 0);
@@ -780,7 +784,7 @@ class _PlanScreenState extends State<PlanScreen> {
 
   // --- Goal Creation Modal ---
 
-  void _showNewGoalModal(BuildContext context, AppController controller, SkyPalette palette) {
+  static void showNewGoalModal(BuildContext context, AppController controller, SkyPalette palette) {
     DateTime? selectedDeadline;
     final titleController = TextEditingController();
 

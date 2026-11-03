@@ -78,15 +78,15 @@ class SkyPalette {
     glassSurfaceColor: Color(0x2EFFFFFF), // White at 0.18 opacity
     glassBorderColor: Color(0x52FFFFFF), // White at 0.32 opacity
     glassBorderWidth: 1.0,
-    glassRadius: 24.0,
+    glassRadius: 22.0,
     primaryText: Color(0xFFFFFFFF), // Cloud White
-    secondaryText: Color(0xFFD6E8FF), // Soft Sky Blue
+    secondaryText: Color(0xFFDBEAFE), // Soft Sky Blue
     amberGold: Color(0xFFFFB547), // Warm Amber Gold
     mintAura: Color(0xFF6EE7B7), // Soft Mint Glow
     deadlineAlertCoral: Color(0xFFFF6B6B), // Deadline Alert Coral
     iceBlueShadow: Color(0xFFD0E4FF), // Soft Ice-Blue 3D shadow
     pillButtonBg: Color(0xFFFFFFFF), // Cloud White
-    pillButtonText: Color(0xFF1E293B), // Deep Navy
+    pillButtonText: Color(0xFF0F172A), // Deep Navy #0F172A
     dockBg: Color(0x38FFFFFF), // Frosted glass dock
     navActiveIcon: Color(0xFFFFFFFF),
     navInactiveIcon: Color(0xB3D6E8FF),
@@ -109,7 +109,7 @@ class SkyPalette {
     glassSurfaceColor: Color(0x1FFFFFFF), // White at ~0.12 opacity
     glassBorderColor: Color(0x3DFFFFFF), // White at ~0.24 opacity
     glassBorderWidth: 1.0,
-    glassRadius: 24.0,
+    glassRadius: 22.0,
     primaryText: Color(0xFFFFFFFF), // Cloud White
     secondaryText: Color(0xFF94A3B8), // Slate Light
     amberGold: Color(0xFFFFB547), // Warm Amber Gold
@@ -129,11 +129,11 @@ class SkyPalette {
     type: SkyThemePalette.oledBlack,
     name: 'Pure Black OLED',
     backgroundGradient: null,
-    backgroundColor: Color(0xFF000000), // Solid Black
+    backgroundColor: Color(0xFF000000), // Solid Black #000000
     glassSurfaceColor: Color(0xFF0B0F17), // Deep Obsidian Surface
-    glassBorderColor: Color(0xFF1E293B), // Crisp 1px border
+    glassBorderColor: Color(0xFF1E293B), // Crisp 1px border #1E293B
     glassBorderWidth: 1.0,
-    glassRadius: 24.0,
+    glassRadius: 22.0,
     primaryText: Color(0xFFFFFFFF),
     secondaryText: Color(0xFF94A3B8),
     amberGold: Color(0xFFFFB547),
@@ -141,7 +141,7 @@ class SkyPalette {
     deadlineAlertCoral: Color(0xFFFF6B6B),
     iceBlueShadow: Color(0xFF05070B),
     pillButtonBg: Color(0xFFFFFFFF),
-    pillButtonText: Color(0xFF000000),
+    pillButtonText: Color(0xFF0F172A),
     dockBg: Color(0xE6000000),
     navActiveIcon: Color(0xFFFFFFFF),
     navInactiveIcon: Color(0x8094A3B8),
