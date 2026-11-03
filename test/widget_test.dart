@@ -100,12 +100,13 @@ void main() {
     await tester.tap(find.text('Stats'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Consistency & Telemetry'), findsOneWidget);
-    expect(find.text('CURRENT STREAK'), findsOneWidget);
-    expect(find.text('TOTAL TOKENS'), findsOneWidget);
-    expect(find.text('TOTAL FOCUS HOURS'), findsOneWidget);
-    expect(find.text('Focus Consistency Matrix'), findsOneWidget);
-    expect(find.text('Chronological Session History'), findsOneWidget);
+    expect(find.text('Consistency & Telemetry'), findsNothing);
+    expect(find.text('STREAK'), findsOneWidget);
+    expect(find.text('TOKENS'), findsOneWidget);
+    expect(find.text('HOURS'), findsOneWidget);
+    expect(find.text('Activity'), findsOneWidget);
+    expect(find.text('12 Weeks'), findsOneWidget);
+    expect(find.text('Chronological Session History'), findsNothing);
 
     // 3. Return to Home tab
     await tester.tap(find.text('Home'));
@@ -164,13 +165,17 @@ void main() {
     // Newly planned session appears ABOVE existing one: Second is next/top
     expect(find.text('Start • Second Deep Block'), findsOneWidget);
 
-    // Tap pedestal to open SessionDetailDialog
+    // Tap pedestal to open compact decluttered SessionDetailDialog
     await tester.tap(find.text('Second Deep Block').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Session Blueprint'), findsOneWidget);
-    expect(find.text('PREFERRED WINDOW'), findsOneWidget);
-    expect(find.text('TOKEN REWARD RULES'), findsOneWidget);
+    expect(find.text('Session Blueprint'), findsNothing);
+    expect(find.text('TOKEN REWARD RULES'), findsNothing);
+    expect(find.text('Duration'), findsOneWidget);
+    expect(find.text('Window'), findsOneWidget);
+    expect(find.text('Reward'), findsOneWidget);
+    expect(find.text('Start Now'), findsOneWidget);
+    expect(find.text('Delete'), findsOneWidget);
     expect(find.byIcon(Icons.close_rounded), findsOneWidget);
 
     // Dismiss dialog
@@ -248,11 +253,13 @@ void main() {
 
     // Should navigate to ActiveFocusScreen
     expect(find.byType(ActiveFocusScreen), findsOneWidget);
-    expect(find.text('Architecture Review'), findsOneWidget);
-    expect(find.textContaining('Finish •'), findsOneWidget);
+    expect(find.text('Active Focus'), findsNothing);
+    expect(find.textContaining('Architecture Review •'), findsOneWidget);
+    expect(find.text('Finish • +0 Tokens'), findsOneWidget);
+    expect(find.textContaining('Standard'), findsNothing);
 
     // Tap Finish button to complete session
-    await tester.tap(find.textContaining('Finish •'));
+    await tester.tap(find.text('Finish • +0 Tokens'));
     await tester.pumpAndSettle();
 
     // Dialog pops and returns to Home

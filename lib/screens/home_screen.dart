@@ -520,3 +520,308 @@ class _DashedLinePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _DashedLinePainter oldDelegate) => oldDelegate.color != color;
 }
+
+/// Compact, decluttered Session Detail Dialog.
+class SessionDetailDialog extends StatelessWidget {
+  final PlannedSession session;
+  final VoidCallback onStartSession;
+  final VoidCallback? onDeleteSession;
+
+  const SessionDetailDialog({
+    super.key,
+    required this.session,
+    required this.onStartSession,
+    this.onDeleteSession,
+  });
+
+  static Future<void> show({
+    required BuildContext context,
+    required PlannedSession session,
+    required VoidCallback onStartSession,
+    VoidCallback? onDeleteSession,
+  }) {
+    return showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.55),
+      builder: (ctx) => SessionDetailDialog(
+        session: session,
+        onStartSession: onStartSession,
+        onDeleteSession: onDeleteSession,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = SkyThemeScope.paletteOf(context);
+    final windowRelation = session.preferredWindow?.checkRelation(DateTime.now());
+    final mult = windowRelation?.multiplier ?? 1.0;
+    final tokens = (session.plannedMinutes * mult).floor();
+    final multTag = mult == 1.0 ? '1.0x' : '${mult}x';
+    final windowString = session.preferredWindow?.toDisplayString() ?? 'Flexible';
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: SkyGlassCard(
+        padding: const EdgeInsets.all(22),
+        borderRadius: BorderRadius.circular(28),
+        backgroundColor: palette.isDark ? const Color(0xFF1E293B) : const Color(0xFF3888E6),
+        borderColor: Colors.white.withOpacity(0.35),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Single Top Row: session topicTitle (bold 24px Cloud White) on left, close X IconButton on right
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      session.topicTitle,
+                      style: const TextStyle(
+                        fontFamily: 'sans-serif',
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFFFFFFF), // Cloud White
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: Colors.white, size: 22),
+                    onPressed: () => Navigator.of(context).pop(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    splashRadius: 18,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // 2. Compact horizontal row of 3 equal-height frosted metric cells (height 62px, 8px gap, borderRadius 16px)
+              Row(
+                children: [
+                  // Duration / "${plannedMinutes}m"
+                  Expanded(
+                    child: Container(
+                      height: 62,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.white.withOpacity(0.14),
+                        border: Border.all(color: Colors.white.withOpacity(0.28)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Duration',
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontFamily: 'sans-serif',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: palette.secondaryText,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '${session.plannedMinutes}m',
+                              style: const TextStyle(
+                                fontFamily: 'sans-serif',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Window / "$windowString"
+                  Expanded(
+                    child: Container(
+                      height: 62,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.white.withOpacity(0.14),
+                        border: Border.all(color: Colors.white.withOpacity(0.28)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Window',
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontFamily: 'sans-serif',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: palette.secondaryText,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              windowString,
+                              style: const TextStyle(
+                                fontFamily: 'sans-serif',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Reward / "+$tokens" (with tiny 11px multiplier tag like "1.25x" or "0.75x")
+                  Expanded(
+                    child: Container(
+                      height: 62,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.white.withOpacity(0.14),
+                        border: Border.all(color: Colors.white.withOpacity(0.28)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Reward',
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontFamily: 'sans-serif',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: palette.secondaryText,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '+$tokens',
+                                  style: TextStyle(
+                                    fontFamily: 'sans-serif',
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: palette.amberGold,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(6),
+                                    color: mult >= 1.25
+                                        ? palette.mintAura.withOpacity(0.25)
+                                        : (mult < 1.0
+                                            ? palette.amberGold.withOpacity(0.25)
+                                            : Colors.white.withOpacity(0.20)),
+                                  ),
+                                  child: Text(
+                                    multTag,
+                                    style: TextStyle(
+                                      fontFamily: 'sans-serif',
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: mult >= 1.25 ? palette.mintAura : Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // 3. Full-width Cloud White "Start Now" pill button (height 50px)
+              SizedBox(
+                height: 50,
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFFFFF), // Cloud White
+                    foregroundColor: const Color(0xFF0F172A),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    onStartSession();
+                  },
+                  child: const Text(
+                    'Start Now',
+                    style: TextStyle(
+                      fontFamily: 'sans-serif',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                ),
+              ),
+
+              // 4. Centered "Delete" text button below it
+              if (onDeleteSession != null) ...[
+                const SizedBox(height: 4),
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      onDeleteSession!();
+                    },
+                    child: Text(
+                      'Delete',
+                      style: TextStyle(
+                        fontFamily: 'sans-serif',
+                        fontSize: 13,
+                        color: palette.deadlineAlertCoral,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -34,19 +34,10 @@ class ActiveFocusScreen extends StatelessWidget {
     final reward = controller.liveRewardBreakdown;
     final showCentiseconds = controller.settings.precisionShowCentiseconds;
 
-    // Multiplier description string
-    String baseMultiplierLabel;
-    if (controller.activeWindowMultiplier == 1.25) {
-      baseMultiplierLabel = '1.25x Window Bonus';
-    } else if (controller.activeWindowMultiplier == 0.75) {
-      baseMultiplierLabel = '0.75x Late';
-    } else {
-      baseMultiplierLabel = '1.0x Standard';
-    }
-
-    final multiplierLabel = reward.isFlowMultiplierActive
-        ? '$baseMultiplierLabel + 1.5x Flow Zone'
-        : baseMultiplierLabel;
+    // Compact combined topic and active multiplier string (e.g. "Assignment • 1.25x")
+    final mult = controller.activeWindowMultiplier;
+    final multStr = mult == 1.0 ? '1.0x' : '${mult}x';
+    final combinedTopicMultiplier = '${controller.activeTopic} • $multStr';
 
     return PopScope(
       canPop: false,
@@ -70,201 +61,95 @@ class ActiveFocusScreen extends StatelessWidget {
                 children: [
                   const SizedBox(height: 8),
 
-                  // Top Bar: Cancel button & Status Pill
-                  Row(
-                    children: [
-                      SkyGlassCard(
-                        padding: EdgeInsets.zero,
-                        width: 42,
-                        height: 42,
-                        borderRadius: BorderRadius.circular(21),
-                        onTap: () => _confirmAbandonSession(context, controller),
-                        child: Center(
-                          child: Icon(
-                            Icons.close_rounded,
-                            color: palette.primaryText,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Center(
-                          child: SkyGlassPill(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: palette.mintAura,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: palette.mintAura.withOpacity(0.6),
-                                        blurRadius: 6,
-                                        spreadRadius: 1,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    'Active Focus',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontFamily: 'sans-serif',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: palette.primaryText,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const SizedBox(width: 42), // Balance symmetry
-                    ],
-                  ),
-
-                  // Center Stage: Cohesive Frosted Timer Capsule
-                  Expanded(
-                    child: Center(
-                      child: SkyGlassCard(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
-                        borderRadius: BorderRadius.circular(36),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // 1. Topic Pill above timer
-                            SkyGlassPill(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                              backgroundColor: Colors.white.withOpacity(0.15),
-                              borderColor: Colors.white.withOpacity(0.35),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.layers_rounded,
-                                    color: palette.amberGold,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Flexible(
-                                    child: Text(
-                                      controller.activeTopic,
-                                      style: TextStyle(
-                                        fontFamily: 'sans-serif',
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: palette.primaryText,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            // 2. Main Tabular Digits (68px, 700 weight) + Optional Centiseconds (28px)
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
-                                children: [
-                                  Text(
-                                    '$minutesStr:$secondsStr',
-                                    style: TextStyle(
-                                      fontFamily: 'sans-serif',
-                                      fontSize: 68,
-                                      fontWeight: FontWeight.w700,
-                                      color: palette.primaryText,
-                                      letterSpacing: 2.0,
-                                      fontFeatures: const [
-                                        FontFeature.tabularFigures(),
-                                      ],
-                                      shadows: [
-                                        Shadow(
-                                          color: Colors.black.withOpacity(0.25),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 3),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (showCentiseconds) ...[
-                                    Text(
-                                      '.$centiStr',
-                                      style: TextStyle(
-                                        fontFamily: 'sans-serif',
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w600,
-                                        color: palette.secondaryText,
-                                        fontFeatures: const [
-                                          FontFeature.tabularFigures(),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // 3. Live Reward Multiplier Pill below timer
-                            SkyGlassPill(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                              backgroundColor: reward.isFlowMultiplierActive
-                                  ? palette.amberGold.withOpacity(0.25)
-                                  : Colors.white.withOpacity(0.12),
-                              borderColor: reward.isFlowMultiplierActive
-                                  ? palette.amberGold
-                                  : Colors.white.withOpacity(0.30),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    reward.isFlowMultiplierActive
-                                        ? Icons.bolt_rounded
-                                        : Icons.timer_outlined,
-                                    color: reward.isFlowMultiplierActive
-                                        ? palette.amberGold
-                                        : palette.mintAura,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    multiplierLabel,
-                                    style: TextStyle(
-                                      fontFamily: 'sans-serif',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: palette.primaryText,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                  // Top Bar: Top-left circular close/abort IconButton ONLY
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SkyGlassCard(
+                      padding: EdgeInsets.zero,
+                      width: 42,
+                      height: 42,
+                      borderRadius: BorderRadius.circular(21),
+                      onTap: () => _confirmAbandonSession(context, controller),
+                      child: Center(
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: palette.primaryText,
+                          size: 20,
                         ),
                       ),
                     ),
                   ),
 
-                  // Bottom Button: "Finish • +[X] Tokens" (margin 20px, bottom 24px)
+                  // Center Stage: Numbers sitting directly on open sky canvas without outer container
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // 1. Single compact frosted pill combining topic and active multiplier
+                          SkyGlassPill(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            backgroundColor: Colors.white.withOpacity(0.18),
+                            borderColor: Colors.white.withOpacity(0.32),
+                            child: Text(
+                              combinedTopicMultiplier,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'sans-serif',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFFFFFFFF), // Cloud White
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // 2. Tabular-figures digits in pure Cloud White (fontSize 76, FontWeight.w700, zero shadow)
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  '$minutesStr:$secondsStr',
+                                  style: const TextStyle(
+                                    fontFamily: 'sans-serif',
+                                    fontSize: 76,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFFFFFFFF), // Cloud White
+                                    letterSpacing: 2.0,
+                                    fontFeatures: [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                                if (showCentiseconds) ...[
+                                  Text(
+                                    '.$centiStr',
+                                    style: TextStyle(
+                                      fontFamily: 'sans-serif',
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFFFFFFFF).withOpacity(0.80),
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Bottom Button: "Finish • +[X] Tokens" strictly without parenthetical suffixes
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                     child: SizedBox(
@@ -298,7 +183,7 @@ class ActiveFocusScreen extends StatelessWidget {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            'Finish • +${reward.totalTokens} Tokens ($multiplierLabel)',
+                            'Finish • +${reward.totalTokens} Tokens',
                             style: const TextStyle(
                               fontFamily: 'sans-serif',
                               fontSize: 16,

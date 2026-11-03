@@ -28,47 +28,20 @@ class StatsScreen extends StatelessWidget {
       bottom: false,
       child: ListView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 32.0),
         children: [
-          const SizedBox(height: 8),
-
-          // Header
-          Text(
-            'Consistency & Telemetry',
-            style: TextStyle(
-              fontFamily: 'sans-serif',
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: palette.primaryText,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Dynamic cadence history and focus consistency metrics.',
-            style: TextStyle(
-              fontFamily: 'sans-serif',
-              fontSize: 13,
-              color: palette.secondaryText,
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // 1. Three Calm Summary Cards
+          // 1. Three Calm Summary Cards (fixed 82px height, 10px gap)
           _buildSummaryCards(controller, totalFocusHours, palette),
 
           const SizedBox(height: 16),
 
-          // 2. GitHub-Style Multi-Week Consistency Heatmap Grid
+          // 2. GitHub-Style Multi-Week Consistency Heatmap Grid (dynamic edge-to-edge)
           _buildHeatmapCard(controller, palette),
 
           const SizedBox(height: 18),
 
-          // 3. Chronological Session History List
+          // 3. Recent Sessions List (or SizedBox.shrink() when empty)
           _buildSessionHistorySection(controller, palette),
-
-          const SizedBox(height: 32),
         ],
       ),
     );
@@ -77,153 +50,132 @@ class StatsScreen extends StatelessWidget {
   Widget _buildSummaryCards(AppController controller, String totalFocusHours, SkyPalette palette) {
     return Row(
       children: [
-        // Active Streak Card
+        // Active Streak Card (82px fixed height)
         Expanded(
-          child: SkyGlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-            borderRadius: BorderRadius.circular(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'CURRENT STREAK',
-                  style: TextStyle(
-                    fontFamily: 'sans-serif',
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: palette.secondaryText,
-                    letterSpacing: 0.8,
+          child: SizedBox(
+            height: 82,
+            child: SkyGlassCard(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              borderRadius: BorderRadius.circular(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'STREAK',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'sans-serif',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: palette.secondaryText,
+                      letterSpacing: 0.8,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    children: [
-                      Text(
-                        '${controller.currentStreak}',
-                        style: TextStyle(
-                          fontFamily: 'sans-serif',
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: palette.amberGold,
-                        ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${controller.currentStreak}d',
+                      style: TextStyle(
+                        fontFamily: 'sans-serif',
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: palette.amberGold,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Days',
-                        style: TextStyle(
-                          fontFamily: 'sans-serif',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: palette.primaryText,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Consecutive',
-                  style: TextStyle(fontFamily: 'sans-serif', fontSize: 11, color: palette.secondaryText),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
 
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
 
-        // Total Tokens Card
+        // Total Tokens Card (82px fixed height)
         Expanded(
-          child: SkyGlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-            borderRadius: BorderRadius.circular(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'TOTAL TOKENS',
-                  style: TextStyle(
-                    fontFamily: 'sans-serif',
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: palette.secondaryText,
-                    letterSpacing: 0.8,
+          child: SizedBox(
+            height: 82,
+            child: SkyGlassCard(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              borderRadius: BorderRadius.circular(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'TOKENS',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'sans-serif',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: palette.secondaryText,
+                      letterSpacing: 0.8,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    children: [
-                      Text(
-                        '${controller.walletTokenBalance}',
-                        style: TextStyle(
-                          fontFamily: 'sans-serif',
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: palette.primaryText,
-                        ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${controller.walletTokenBalance}',
+                      style: TextStyle(
+                        fontFamily: 'sans-serif',
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: palette.primaryText,
                       ),
-                      const SizedBox(width: 4),
-                      Icon(Icons.auto_awesome_rounded, color: palette.amberGold, size: 14),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Wallet Balance',
-                  style: TextStyle(fontFamily: 'sans-serif', fontSize: 11, color: palette.secondaryText),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
 
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
 
-        // Total Focus Hours Card
+        // Total Focus Hours Card (82px fixed height)
         Expanded(
-          child: SkyGlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-            borderRadius: BorderRadius.circular(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'TOTAL FOCUS HOURS',
-                  style: TextStyle(
-                    fontFamily: 'sans-serif',
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: palette.secondaryText,
-                    letterSpacing: 0.8,
+          child: SizedBox(
+            height: 82,
+            child: SkyGlassCard(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              borderRadius: BorderRadius.circular(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'HOURS',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'sans-serif',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: palette.secondaryText,
+                      letterSpacing: 0.8,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    children: [
-                      Text(
-                        '${totalFocusHours}h',
-                        style: TextStyle(
-                          fontFamily: 'sans-serif',
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: palette.primaryText,
-                        ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${totalFocusHours}h',
+                      style: TextStyle(
+                        fontFamily: 'sans-serif',
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: palette.primaryText,
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Completed Time',
-                  style: TextStyle(fontFamily: 'sans-serif', fontSize: 11, color: palette.secondaryText),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -231,7 +183,7 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  /// Multi-week GitHub-style Consistency Heatmap Grid.
+  /// Multi-week GitHub-style Consistency Heatmap Grid stretching edge-to-edge dynamically.
   Widget _buildHeatmapCard(AppController controller, SkyPalette palette) {
     // Map sessions into daily intensity (minutes per day)
     final dailyMinutesMap = <String, int>{};
@@ -257,7 +209,7 @@ class StatsScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Focus Consistency Matrix',
+                  'Activity',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -270,7 +222,7 @@ class StatsScreen extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Last 12 Weeks',
+                '12 Weeks',
                 style: TextStyle(
                   fontFamily: 'sans-serif',
                   fontSize: 11,
@@ -282,26 +234,31 @@ class StatsScreen extends StatelessWidget {
 
           const SizedBox(height: 14),
 
-          // Scrollable Grid Layout
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: List.generate(weeksCount, (weekIdx) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                  child: Column(
-                    children: List.generate(7, (dayIdx) {
+          // Edge-to-edge dynamic LayoutBuilder grid
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final availableWidth = constraints.maxWidth;
+              const columns = 12;
+              const rows = 7;
+              const gap = 4.0;
+              final squareSize = ((availableWidth - ((columns - 1) * gap)) / columns).clamp(8.0, 36.0);
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: List.generate(columns, (weekIdx) {
+                  return Column(
+                    children: List.generate(rows, (dayIdx) {
                       final dayOffset = (weekIdx * 7) + dayIdx;
                       final dayDate = startDate.add(Duration(days: dayOffset));
-                      final key = '${dayDate.year}-${dayDate.month.toString().padLeft(2, '0')}-${dayDate.day.toString().padLeft(2, '0')}';
+                      final key =
+                          '${dayDate.year}-${dayDate.month.toString().padLeft(2, '0')}-${dayDate.day.toString().padLeft(2, '0')}';
                       final minutes = dailyMinutesMap[key] ?? 0;
 
                       return Container(
-                        width: 14,
-                        height: 14,
-                        margin: const EdgeInsets.symmetric(vertical: 2.0),
+                        width: squareSize,
+                        height: squareSize,
+                        margin: EdgeInsets.only(bottom: dayIdx < rows - 1 ? gap : 0),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(4),
                           color: _getHeatmapColor(minutes, palette),
@@ -312,10 +269,10 @@ class StatsScreen extends StatelessWidget {
                         ),
                       );
                     }),
-                  ),
-                );
-              }),
-            ),
+                  );
+                }),
+              );
+            },
           ),
 
           const SizedBox(height: 12),
@@ -373,35 +330,23 @@ class StatsScreen extends StatelessWidget {
 
   Widget _buildSessionHistorySection(AppController controller, SkyPalette palette) {
     final sessions = controller.completedSessions;
+    if (sessions.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Chronological Session History',
+          'Recent',
           style: TextStyle(
             fontFamily: 'sans-serif',
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w700,
             color: palette.primaryText,
           ),
         ),
         const SizedBox(height: 10),
-
-        if (sessions.isEmpty)
-          SkyGlassCard(
-            padding: const EdgeInsets.all(20),
-            borderRadius: BorderRadius.circular(20),
-            child: Center(
-              child: Text(
-                'No completed sessions logged yet.\nComplete focus sessions to see historical telemetry.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: palette.secondaryText, height: 1.3),
-              ),
-            ),
-          )
-        else
-          ...sessions.map((s) {
             final dateStr = '${s.endTime.month}/${s.endTime.day} • ${s.endTime.hour.toString().padLeft(2, '0')}:${s.endTime.minute.toString().padLeft(2, '0')}';
 
             return Padding(
