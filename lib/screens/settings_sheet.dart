@@ -69,15 +69,16 @@ class SettingsSheet extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Settings',
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFFFFFFF),
+                    const Expanded(
+                      child: Text(
+                        'Settings',
+                        style: TextStyle(
+                          fontFamily: 'sans-serif',
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFFFFFFFF),
+                        ),
                       ),
                     ),
                     IconButton(
@@ -174,14 +175,17 @@ class SettingsSheet extends StatelessWidget {
                       : null,
                 ),
                 alignment: Alignment.center,
-                child: Text(
-                  opt['name'] as String,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'sans-serif',
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? const Color(0xFF0F172A) : palette.secondaryText,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    opt['name'] as String,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'sans-serif',
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected ? const Color(0xFF0F172A) : palette.secondaryText,
+                    ),
                   ),
                 ),
               ),
@@ -204,15 +208,16 @@ class SettingsSheet extends StatelessWidget {
         border: Border.all(color: Colors.white.withOpacity(0.20)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Precision (.00)',
-            style: TextStyle(
-              fontFamily: 'sans-serif',
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFFFFFFFF),
+          const Expanded(
+            child: Text(
+              'Precision (.00)',
+              style: TextStyle(
+                fontFamily: 'sans-serif',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFFFFFFF),
+              ),
             ),
           ),
           Switch.adaptive(

@@ -558,15 +558,16 @@ class _PlanScreenState extends State<PlanScreen> {
 
                       // Header Row
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'New Session',
-                            style: TextStyle(
-                              fontFamily: 'sans-serif',
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFFFFFFF),
+                          const Expanded(
+                            child: Text(
+                              'New Session',
+                              style: TextStyle(
+                                fontFamily: 'sans-serif',
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFFFFFFF),
+                              ),
                             ),
                           ),
                           IconButton(
@@ -700,15 +701,18 @@ class _PlanScreenState extends State<PlanScreen> {
                                     borderRadius: BorderRadius.circular(14),
                                   ),
                                   alignment: Alignment.center,
-                                  child: Text(
-                                    '${d}m',
-                                    style: TextStyle(
-                                      fontFamily: 'sans-serif',
-                                      fontSize: 14,
-                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                      color: isSelected
-                                          ? const Color(0xFF0F172A)
-                                          : Colors.white,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      '${d}m',
+                                      style: TextStyle(
+                                        fontFamily: 'sans-serif',
+                                        fontSize: 14,
+                                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                        color: isSelected
+                                            ? const Color(0xFF0F172A)
+                                            : Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -731,15 +735,16 @@ class _PlanScreenState extends State<PlanScreen> {
                         child: Column(
                           children: [
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  'Time Window',
-                                  style: TextStyle(
-                                    fontFamily: 'sans-serif',
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                                const Expanded(
+                                  child: Text(
+                                    'Time Window',
+                                    style: TextStyle(
+                                      fontFamily: 'sans-serif',
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                                 Switch.adaptive(
@@ -769,13 +774,16 @@ class _PlanScreenState extends State<PlanScreen> {
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         alignment: Alignment.center,
-                                        child: Text(
-                                          startTime.format(ctx),
-                                          style: const TextStyle(
-                                            fontFamily: 'sans-serif',
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            startTime.format(ctx),
+                                            style: const TextStyle(
+                                              fontFamily: 'sans-serif',
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -802,13 +810,16 @@ class _PlanScreenState extends State<PlanScreen> {
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         alignment: Alignment.center,
-                                        child: Text(
-                                          endTime.format(ctx),
-                                          style: const TextStyle(
-                                            fontFamily: 'sans-serif',
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            endTime.format(ctx),
+                                            style: const TextStyle(
+                                              fontFamily: 'sans-serif',
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -921,15 +932,16 @@ class _PlanScreenState extends State<PlanScreen> {
 
                       // Header Row
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'New Goal',
-                            style: TextStyle(
-                              fontFamily: 'sans-serif',
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFFFFFFF),
+                          const Expanded(
+                            child: Text(
+                              'New Goal',
+                              style: TextStyle(
+                                fontFamily: 'sans-serif',
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFFFFFFF),
+                              ),
                             ),
                           ),
                           IconButton(
@@ -983,23 +995,23 @@ class _PlanScreenState extends State<PlanScreen> {
                           border: Border.all(color: Colors.white.withOpacity(0.20)),
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Row(
-                              children: [
-                                Icon(Icons.event_rounded, size: 18, color: Colors.white),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Target Date',
-                                  style: TextStyle(
-                                    fontFamily: 'sans-serif',
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
+                            const Icon(Icons.event_rounded, size: 18, color: Colors.white),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Target Date',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: 'sans-serif',
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
                                 ),
-                              ],
+                              ),
                             ),
+                            const SizedBox(width: 8),
                             GestureDetector(
                               onTap: () async {
                                 final picked = await showDatePicker(
