@@ -848,10 +848,6 @@ class _PlanScreenState extends State<PlanScreen> {
         );
       },
     );
-          },
-        );
-      },
-    );
   }
 
   // --- Goal Creation Modal ---
@@ -1053,10 +1049,6 @@ class _PlanScreenState extends State<PlanScreen> {
                 ),
               ),
             );
-          },
-        );
-      },
-    );
           },
         );
       },
